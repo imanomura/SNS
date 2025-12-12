@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新規会員登録</title>
+    <link href="style.css" rel="stylesheet" />
+    <script src="https://unpkg.com/petite-vue" defer init></script>
+  </head>
+  <body>
+    <p>Hello,World!</p>
+    <p>新機会員登録</p>
+    <form v-scope="Registraapp()">
+      <label>メールアドレス：<input type="email" v-model="form_email" /></label> <br />
+      <label>パスワード：<input type="password" v-model="form_pass" /></label> <br />
+      <label>生年月日：<input type="date" v-model="form_BH" /></label><br />
+      <label>プロフィール画像:<input type="file" accept=".png, .jpg, .jpeg" v-model="form_image" /></label><br />
+      <label
+        ><figure><img height="200" /></figure></label
+      ><br />
+
+      <button type="button">ゲスト</button>
+      <button type="submit" @click="submitData">登録</button>
+    </form>
+  </body>
+  <script src="script.js"></script>
+</html>

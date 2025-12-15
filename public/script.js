@@ -31,6 +31,11 @@ function Registraapp() {
     count: 0,
 
     async submitData() {
+      const file = document.querySelector('input').files[0];
+      if (!file) {
+        window.alert('画像ファイルを選択してください');
+        return;
+      }
       const form_Data = new FormData();
       form_Data.append('userId', this.count);
       form_Data.append('title', 'new_member');
@@ -47,6 +52,8 @@ function Registraapp() {
       });
       const obj = await res.json();
       this.data = obj;
+      const image = obj.files.image;
+      document.querySelector('(img').src = image;
       console.log(JSON.stringify(this.data, null, 2));
     }
   };

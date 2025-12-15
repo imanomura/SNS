@@ -21,7 +21,7 @@ function Registraapp() {
     //登録
     async submitData() {
       // const file = document.querySelector('input').files[0];
-      if (!file) {
+      if (!this.file) {
         alert('画像ファイルを選択してください');
         return;
       }
@@ -45,7 +45,7 @@ function Registraapp() {
       // const url = 'https://httpbin.org/post';
 
       // const res = await fetch(url, {
-      const res = await fetch('/api', {
+      const res = await fetch('/api/new_member', {
         method: 'POST',
         body: form_Data
       });
@@ -64,7 +64,7 @@ function login_dataset() {
     data: false,
 
     async login_getData() {
-      const res = await fetch('/api');
+      const res = await fetch('/api/login');
       this.data = await res.json();
       console.log(this.data.message);
     }

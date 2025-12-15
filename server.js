@@ -13,13 +13,14 @@ Deno.serve(app.fetch);
 //postリクエストに対する処理
 app.post('/api/sns', async (c) => {
   const body = await c.req.parseBody();
-  const record = JSON.parse(body['form_Data']);
+  const form_Data = body.form_Data;
 
   const id = await getNextId();
-  record['id'] = id;
-  record['createdAt'] = new Date().toISOString();
-  await KeyboardEvent.set(['form_Data', id], record);
+  //フォームデータにIDと作成日時を追加
+  form_Data['id'] = id;
+  form_Data['createdAt'] = new Date().toISOString();
+  await kv.set(['users', id], form_Data);
   c.status(201);
   c.header('Location', `/api/sns/${id}`);
-  return c.json({ record });
+  return c.json({ form_Data });
 });

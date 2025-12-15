@@ -42,8 +42,10 @@ function Registraapp() {
       // form_Data.append('new_image', this.form_image);
       form_Data.append('image', this.file);
       form_Data.append('completed', 'false');
-      const url = 'https://httpbin.org/post';
-      const res = await fetch(url, {
+      // const url = 'https://httpbin.org/post';
+
+      // const res = await fetch(url, {
+      const res = await fetch('/api', {
         method: 'POST',
         body: form_Data
       });
@@ -56,3 +58,15 @@ function Registraapp() {
   };
 }
 //登録
+
+function login_dataset() {
+  return {
+    data: false,
+
+    async login_getData() {
+      const res = await fetch('/api');
+      this.data = await res.json();
+      console.log(this.data.message);
+    }
+  };
+}

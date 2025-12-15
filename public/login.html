@@ -9,11 +9,13 @@
   </head>
   <body>
     <p>ログイン</p>
-    <form>
+    <form v-scope="login_dataset()">
       <label>メールアドレス<input /></label><br>
       <label>パスワード：<input type="password"><label><br>
       <label><button type="submit">新機会員登録に戻る</button></label>
-      <label><button type="submit">ログイン</button></label>
+      <label><button type="submit" @click="login_getData">ログイン</button></label>
+      </form>
+
 
   </body>
   <script src="script.js"></script>

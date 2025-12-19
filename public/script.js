@@ -2,11 +2,12 @@
 
 function Registraapp() {
   return {
-    form_email: '',
-    form_pass: '',
-    form_BH: '',
+    username: '',
+    email: '',
+    password: '',
+    HB: '',
     form_image: null,
-    count: 0,
+    // count: 0,
     uploadImage: null,
     data: null,
     file: null,
@@ -27,20 +28,20 @@ function Registraapp() {
         alert('画像ファイルを選択してください');
         return;
       }
-      if (!this.form_email && !this.form_pass && !this.form_BH && !this.form_image) {
+      if (!this.username || !this.email || !this.password || !this.HB || !this.form_image) {
         alert('すべての項目を入力してください');
         return;
       }
-      if (!this.form_email.includes('@')) {
+      if (!this.email.includes('@')) {
         alert('メールアドレスを入力してください');
         return;
       }
       const form_Data = new FormData();
-      form_Data.append('userId', this.count);
-      form_Data.append('title', 'new_member');
-      form_Data.append('new_email', this.form_email);
-      form_Data.append('new_pass', this.form_pass);
-      form_Data.append('new_BH', this.form_BH);
+      form_Data.append('username', this.username);
+      // form_Data.append('title', 'new_member');
+      form_Data.append('email', this.email);
+      form_Data.append('password', this.password);
+      form_Data.append('HB', this.HB);
       // form_Data.append('new_image', this.form_image);
       form_Data.append('image', this.file);
       form_Data.append('completed', 'false');
@@ -57,11 +58,11 @@ function Registraapp() {
       // document.querySelector('img').src = this.uploadImage;
       console.log(JSON.stringify(this.data, null, 2));
 
-      this.form_pass = '';
-      this.form_email = '';
-      this.form_BH = '';
+      this.password = '';
+      this.email = '';
+      this.HB = '';
       this.form_image = null;
-      this.count = 0;
+      // this.count = 0;
       this.uploadImage = null;
       this.data = null;
       this.file = null;

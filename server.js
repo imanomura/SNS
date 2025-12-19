@@ -1,7 +1,9 @@
-// const kv = await Deno.openKv();
 import { Hono } from 'jsr:@hono/hono';
 import { serveStatic } from 'jsr:@hono/hono/deno';
 const app = new Hono();
+
+//データベースの有効か
+const kv = await Deno.openKv();
 
 app.use('/*', serveStatic({ root: './public' }));
 
@@ -14,6 +16,7 @@ app.get('/api/login', async (c) => {});
 //postリクエストに対する処理
 app.post('/api/new_member', async (c) => {
   const form_Data = await c.req.parseBody();
+
   // const form_Data = body.form_Data;
 
   const id = await getNextId();

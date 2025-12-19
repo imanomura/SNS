@@ -11,6 +11,8 @@ function Registraapp() {
     data: null,
     file: null,
 
+    //オブジェクトとしてにする？
+
     // /AI
     form_image(e) {
       this.file = e.target.files[0];
@@ -54,6 +56,15 @@ function Registraapp() {
       // this.uploadImage = obj.files.image;
       // document.querySelector('img').src = this.uploadImage;
       console.log(JSON.stringify(this.data, null, 2));
+
+      this.form_pass = '';
+      this.form_email = '';
+      this.form_BH = '';
+      this.form_image = null;
+      this.count = 0;
+      this.uploadImage = null;
+      this.data = null;
+      this.file = null;
     }
   };
 }

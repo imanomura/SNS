@@ -46,8 +46,8 @@ app.get('/api/login', async (c) => {});
 //postリクエストに対する処理
 app.post('/api/new_member', async (c) => {
   const form_Data = await c.req.parseBody();
-  const username = form_Data.get['username'];
-  const password = form_Data.get['password'];
+  const username = form_Data['username'];
+  const password = form_Data['password'];
   // 登録情報の取得
   if (!username || !password) {
     c.status(400); // 400 Bad Request
@@ -75,9 +75,10 @@ app.post('/api/new_member', async (c) => {
     id: id,
     username: username,
     hashedPassword: hashedPassword,
-    email: form_Data.get['email'],
-    HB: form_Data.get['HB'],
-    image: form_Data.get['image']
+    email: form_Data['email'],
+    HB: form_Data['HB'],
+    image: form_Data['image'],
+    createdAt: new Date().toISOString()
   };
 
   await kv.set(['users', username], userData);

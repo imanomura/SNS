@@ -11,8 +11,7 @@ function Registraapp() {
     uploadImage: null,
     data: null,
     file: null,
-
-    //オブジェクトとしてにする？
+    result: '',
 
     // /AI
     onFileChange(e) {
@@ -43,7 +42,6 @@ function Registraapp() {
       form_Data.append('HB', this.HB);
       form_Data.append('image', this.file);
       form_Data.append('completed', 'false');
-      // const res = await fetch(url, {
       const res = await fetch('/api/new_member', {
         method: 'POST',
         body: form_Data
@@ -57,24 +55,51 @@ function Registraapp() {
       this.password = '';
       this.email = '';
       this.HB = '';
-      // this.form_image = null;
-      // this.count = 0;
       this.uploadImage = null;
-      // this.data = null;
       this.file = null;
-    }
-  };
-}
-//登録
+    }, //登録
 
-function login_dataset() {
-  return {
-    data: false,
-
+    //ログイン
     async login_getData() {
       const res = await fetch('/api/login');
       this.data = await res.json();
+      this.result = this.data.message;
       console.log(this.data.message);
+      if (res.ok) {
+        localStorage.jwt = this.data.token; // localStorageに保存
+      }
+    },
+    //プロフィールの取得
+    async getProfile() {
+      // localStorageからトークンを取得
+      const token = localStorage.jwt;
+      if (!token) {
+        result.textContent = 'ログインしてください';
+        return;
+      }
+      // GETリクエスト
+      const res = await fetch('/api/profile', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.result = 'ログインユーザー：' + data.username;
+      } else {
+        this.result = 'トークンが異なります';
+      }
+    },
+
+    /* ログアウト */
+    async logout() {
+      if (localStorage.jwt) {
+        delete localStorage.jwt;
+        this.result = 'ログアウトしました';
+      } else {
+        this.result = 'ログインしていません';
+      }
     }
   };
 }

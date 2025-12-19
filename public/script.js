@@ -28,7 +28,7 @@ function Registraapp() {
         alert('画像ファイルを選択してください');
         return;
       }
-      if (!this.username || !this.email || !this.password || !this.HB || !this.form_image) {
+      if (!this.username || !this.email || !this.password || !this.HB || !this.file) {
         alert('すべての項目を入力してください');
         return;
       }

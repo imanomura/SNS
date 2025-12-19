@@ -8,7 +8,9 @@ import { hash, verify } from 'jsr:@felix/bcrypt';
 const app = new Hono();
 
 //データベースの有効か
-const kv = await Deno.openKv();
+// const kv = await Deno.openKv();
+// プロジェクトフォルダ内に 'my_database' というファイルを作って保存するよう指定
+const kv = await Deno.openKv('./my_database');
 
 //秘密鍵
 // サーバーの秘密鍵

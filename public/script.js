@@ -43,8 +43,6 @@ function Registraapp() {
       form_Data.append('HB', this.HB);
       form_Data.append('image', this.file);
       form_Data.append('completed', 'false');
-      // const url = 'https://httpbin.org/post';
-
       // const res = await fetch(url, {
       const res = await fetch('/api/new_member', {
         method: 'POST',
@@ -52,8 +50,7 @@ function Registraapp() {
       });
       const obj = await res.json();
       this.data = obj;
-      // this.uploadImage = obj.files.image;
-      // document.querySelector('img').src = this.uploadImage;
+
       console.log(JSON.stringify(this.data, null, 2));
 
       this.username = '';

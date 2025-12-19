@@ -99,7 +99,6 @@ app.post('/api/new_member', async (c) => {
   return c.json({ message: `ユーザー「${username}」を登録しました`, user: responseUser });
 });
 
-//ログイン
 /*** ログイン ***/
 app.post('/api/login', async (c) => {
   // ...
@@ -125,6 +124,28 @@ app.post('/api/login', async (c) => {
   };
   // JWT（トークン）を生成
   const token = await sign(payload, JWT_SECRET);
+  // レスポンス
+  return c.json({
+    message: 'ログイン成功',
+    username: user.username,
+    token: token
+  });
+});
+
+/* 上記以外の /api 以下へのアクセスにはログインが必要 */
+app.use('/api/*', jwt({ secret: JWT_SECRET }));
+
+/*** プロフィール ***/
+app.get('/api/profile', async (c) => {
+  /* ここまで到達できた時点でログインできている */
+  // ...
+  // ミドルウェアで記録されたキー「jwtPayload」の値を取得
+  const payload = c.get('jwtPayload');
+
+  // JWTの本体からユーザー名を取得
+  const username = payload.sub;
+
+  return c.json({ username });
 });
 
 Deno.serve(app.fetch);

@@ -9,6 +9,27 @@ app.use('/*', serveStatic({ root: './public' }));
 
 Deno.serve(app.fetch);
 
+//新しいIDを取得する関数
+async function getNextId() {
+  // pokemonコレクション用のカウンタのキー
+  const key = ['counter', 'pokemon'];
+
+  // アトミック処理の中でカウンターに1を足す
+  const res = await kv.atomic().sum(key, 1n).commit();
+
+  // 確認
+  if (!res.ok) {
+    console.error('IDの生成に失敗しました。');
+    return null;
+  }
+
+  // カウンターをgetして…
+  const counter = await kv.get(key);
+
+  // Number型としてreturnする
+  return Number(counter.value);
+}
+
 //getリクエストに対する処理
 app.get('/api/login', async (c) => {});
 //まだ書いていない

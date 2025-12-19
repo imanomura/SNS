@@ -5,7 +5,11 @@ import { jwt, sign } from 'jsr:@hono/hono/jwt';
 
 // パスワードのハッシュ化（bcrypt）
 import { hash, verify } from 'jsr:@felix/bcrypt';
+
 const app = new Hono();
+// ★ここに追加！
+// 「/」にアクセスが来たら、「/New_member.html」に転送する
+app.get('/', (c) => c.redirect('/New_member.html'));
 
 //データベースの有効か
 // const kv = await Deno.openKv();
@@ -14,7 +18,11 @@ const kv = await Deno.openKv('./my_database');
 
 //秘密鍵
 // サーバーの秘密鍵
-const JWT_SECRET = Deno.env.get('JWT_SECRET');
+// 修正前
+// const JWT_SECRET = Deno.env.get('JWT_SECRET');
+
+// 修正後（文字は何でもいいですが、忘れないように）
+const JWT_SECRET = Deno.env.get('JWT_SECRET') || 'himitsu-no-key';
 
 app.use('/*', serveStatic({ root: './public' }));
 

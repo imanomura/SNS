@@ -59,8 +59,8 @@ body {
   right: -100%; /* 画面外へ隠す */
   width: 300px;
   height: 100vh; /* 画面の高さ一杯に */
-  background-color: #fafad2;
-  color: #333;
+  background-color: #7a2d49;
+  color: #ffffff;
   transition: right 0.3s ease;
   padding: 80px 20px 20px; /* 上の余白を増やしてボタンと被らないように */
   box-sizing: border-box;
@@ -86,8 +86,9 @@ body {
 }
 
 .menu li a {
-  color: #333;
+  color: #ffffff;
   text-decoration: none;
   display: block;
   font-size: 18px;
 }
+/*上記までがハンバーガーメニューのCSS*/

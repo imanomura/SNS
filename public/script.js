@@ -1,17 +1,17 @@
 'use strict';
 
 // ハンバーガーメニュー
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const menu = document.getElementById('menu');
+// document.addEventListener('DOMContentLoaded', function () {
+//   const hamburger = document.getElementById('hamburger');
+//   const menu = document.getElementById('menu');
 
-  hamburger.addEventListener('click', function () {
-    // メニューの開閉
-    menu.classList.toggle('open');
-    // ボタンのアニメーション（バツ印など）
-    hamburger.classList.toggle('active');
-  });
-});
+//   hamburger.addEventListener('click', function () {
+//     // メニューの開閉
+//     menu.classList.toggle('open');
+//     // ボタンのアニメーション（バツ印など）
+//     hamburger.classList.toggle('active');
+//   });
+// });
 
 function Registraapp() {
   return {
@@ -25,6 +25,8 @@ function Registraapp() {
     data: null,
     file: null,
     result: '',
+    //ハンバーガーメニュ用
+    isOpen: false,
 
     // /AI
     onFileChange(e) {
@@ -74,12 +76,17 @@ function Registraapp() {
 
     //ログイン
     async login_getData() {
-      const res = await fetch('/api/login');
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: this.username, password: this.password })
+      });
       this.data = await res.json();
       this.result = this.data.message;
       console.log(this.data.message);
       if (res.ok) {
         localStorage.jwt = this.data.token; // localStorageに保存
+        window.location.href = 'home.html'; //ホーム画面へ移動
       }
     },
     //プロフィールの取得
@@ -87,7 +94,7 @@ function Registraapp() {
       // localStorageからトークンを取得
       const token = localStorage.jwt;
       if (!token) {
-        result.textContent = 'ログインしてください';
+        this.result = 'ログインしてください';
         return;
       }
       // GETリクエスト
@@ -116,3 +123,5 @@ function Registraapp() {
     }
   };
 }
+
+// PetiteVue.createApp(Registraapp).mount();

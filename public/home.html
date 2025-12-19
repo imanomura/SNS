@@ -8,18 +8,27 @@
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
   <body>
-    <div class="hamburger" id="hamburger">
+    <p>タイムライン</p>
+    <div class="hamburger" id="hamburger" @click="isOpen = !isOpen" :class="{ active: isOpen }">
       <span></span>
       <span></span>
       <span></span>
     </div>
 
-    <nav class="menu" id="menu">
+    <nav class="menu" id="menu" :class="{ open: isOpen }">
       <ul>
-        <li><a href="#">プロフィール確認</a></li>
+        <li>
+          <button @click.prevent="getProfile">
+            <a href="#">プロフィール確認</a>
+          </button>
+        </li>
         <li><a href="#">ブックマーク</a></li>
         <li><a href="#">設定</a></li>
-        <li><a href="#">ログアウト</a></li>
+        <li>
+          <button @click.prevent="logout">
+            <a href="#">ログアウト</a>
+          </button>
+        </li>
       </ul>
     </nav>
   </body>

@@ -8,15 +8,16 @@
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
   <body>
-    <p>ログイン</p>
-    <form @submit.prevent="login_dataset()">
-      <label>メールアドレス：<input type="email" v-model="email" /></label><br />
-      <label>パスワード：<input type="password" v-model="password" /></label><br />
-      <!-- <label><button type="submit">新機会員登録に戻る</button></label> -->
-      <label><button type="submit" @click="login_getData">ログイン</button></label>
-    </form>
+    <div v-scope="Registraapp()">
+      <p>ログイン</p>
+      <form @submit.prevent="login_getData">
+        <label>ユーザー名：<input type="text" v-model="username" /></label><br />
+        <label>パスワード：<input type="password" v-model="password" /></label><br />
+        <label><button type="submit">ログイン</button></label>
+      </form>
 
-    <p>新機会員登録に<a href="/New_member.html">戻る</a></p>
+      <p>新機会員登録に<a href="/New_member.html">戻る</a></p>
+    </div>
   </body>
   <script src="script.js"></script>
 </html>

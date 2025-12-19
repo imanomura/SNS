@@ -4,19 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ログイン</title>
-    <link href="style.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet" />
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
   <body>
     <p>ログイン</p>
-    <form v-scope="login_dataset()">
-      <label>メールアドレス<input /></label><br>
-      <label>パスワード：<input type="password"><label><br>
-      <label><button type="submit">新機会員登録に戻る</button></label>
+    <form @submit.prevent="login_dataset()">
+      <label>メールアドレス：<input type="email" v-model="email" /></label><br />
+      <label>パスワード：<input type="password" v-model="password" /></label><br />
+      <!-- <label><button type="submit">新機会員登録に戻る</button></label> -->
       <label><button type="submit" @click="login_getData">ログイン</button></label>
-      </form>
+    </form>
 
-
+    <p>新機会員登録に<a href="/New_member.html">戻る</a></p>
   </body>
   <script src="script.js"></script>
 </html>

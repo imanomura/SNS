@@ -99,4 +99,32 @@ app.post('/api/new_member', async (c) => {
   return c.json({ message: `ユーザー「${username}」を登録しました`, user: responseUser });
 });
 
+//ログイン
+/*** ログイン ***/
+app.post('/api/login', async (c) => {
+  // ...
+  const { username, password } = await c.req.json();
+  const userEntry = await kv.get(['users', username]);
+  const user = userEntry.value;
+  if (!user) {
+    c.status(401);
+    return c.json({ message: 'ユーザー名が無効です。' });
+  }
+  // ハッシュ化されたパスワードと比較
+  const verified = await verify(password, user.hashedPassword);
+  if (!verified) {
+    c.status(401); // 401 Unauthorized
+    return c.json({ message: 'パスワードが無効です' });
+  }
+  // JWTのペイロードを設定
+  const payload = {
+    sub: user.username, // ユーザー識別子
+    // name: user.username,  // 表示用のユーザー名
+    iat: Math.floor(Date.now() / 1000), // 発行日時
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24時間有効
+  };
+  // JWT（トークン）を生成
+  const token = await sign(payload, JWT_SECRET);
+});
+
 Deno.serve(app.fetch);

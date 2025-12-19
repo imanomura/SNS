@@ -1,5 +1,18 @@
 'use strict';
 
+// ハンバーガーメニュー
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const menu = document.getElementById('menu');
+
+  hamburger.addEventListener('click', function () {
+    // メニューの開閉
+    menu.classList.toggle('open');
+    // ボタンのアニメーション（バツ印など）
+    hamburger.classList.toggle('active');
+  });
+});
+
 function Registraapp() {
   return {
     username: '',

@@ -1,3 +1,93 @@
 body {
   background-color: #e29399;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- ハンバーガーボタン --- */
+.hamburger {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 30px;
+  height: 25px; /* クリックしやすいように高さを確保 */
+  cursor: pointer;
+  z-index: 100; /* メニューより手前に表示 */
+}
+
+.hamburger span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: #333;
+  position: absolute; /* 線を絶対配置で制御 */
+  transition: 0.4s;
+  border-radius: 2px;
+}
+
+/* 3本線の位置指定 */
+.hamburger span:nth-child(1) {
+  top: 0;
+}
+.hamburger span:nth-child(2) {
+  top: 10px;
+}
+.hamburger span:nth-child(3) {
+  top: 20px;
+}
+
+/* --- バツ印のアニメーション --- */
+.hamburger.active span:nth-child(1) {
+  top: 10px; /* 真ん中に寄せる */
+  transform: rotate(45deg);
+}
+
+.hamburger.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+  top: 10px; /* 真ん中に寄せる */
+  transform: rotate(-45deg);
+}
+
+/* --- メニュー本体 --- */
+.menu {
+  position: fixed;
+  top: 0;
+  right: -100%; /* 画面外へ隠す */
+  width: 300px;
+  height: 100vh; /* 画面の高さ一杯に */
+  background-color: #fafad2;
+  color: #333;
+  transition: right 0.3s ease;
+  padding: 80px 20px 20px; /* 上の余白を増やしてボタンと被らないように */
+  box-sizing: border-box;
+  z-index: 50; /* ボタンより後ろ、コンテンツより前 */
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* 少し影をつけると見やすい */
+}
+
+/* メニューが開いたとき */
+.menu.open {
+  right: 0;
+}
+
+/* メニューリスト */
+.menu ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu li {
+  padding: 20px 0;
+  border-bottom: 1px solid #ccc; /* 線の色を少し薄く */
+}
+
+.menu li a {
+  color: #333;
+  text-decoration: none;
+  display: block;
+  font-size: 18px;
 }

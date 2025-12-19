@@ -23,34 +23,27 @@
         ><br />
 
         <button type="button">ゲスト</button>
-        <button type="submit" @click="submitData">登録</button>
+        <button type="submit">登録</button>
       </form>
 
     
-      <table>
-        <tr>
-          <td>メールアドレス</td><td>パスワード</td><td>生年月日</td><td>プロフィール画像</td>
-        </tr>
-      <table>
-        <div v-if="data">
-        <h3>登録完了データ（サーバーからの返信）</h3>
-        <table border="1">
-          <table>
+      <table border="1">
+          <thead>
             <tr>
               <th>ID</th>
               <th>ユーザー名</th>
               <th>メールアドレス</th>
               <th>生年月日</th>
             </tr>
-          </table>
-          <table>
+          </thead>
+          <tbody>
             <tr>
-              <td>{{ data.user.id }}</td>
-              <td>{{ data.user.username }}</td>
-              <td>{{ data.user.email }}</td>
-              <td>{{ data.user.HB }}</td>
+              <td>{{ data.user ? data.user.id : '' }}</td>
+              <td>{{ data.user ? data.user.username : '' }}</td>
+              <td>{{ data.user ? data.user.email : '' }}</td>
+              <td>{{ data.user ? data.user.HB : '' }}</td>
             </tr>
-          </table>
+          </tbody>
         </table>
         <p v-if="data.message">{{ data.message }}</p>
       </div>

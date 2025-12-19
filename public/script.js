@@ -56,13 +56,14 @@ function Registraapp() {
       // document.querySelector('img').src = this.uploadImage;
       console.log(JSON.stringify(this.data, null, 2));
 
+      this.username = '';
       this.password = '';
       this.email = '';
       this.HB = '';
       this.form_image = null;
       // this.count = 0;
       this.uploadImage = null;
-      this.data = null;
+      // this.data = null;
       this.file = null;
     }
   };

@@ -64,9 +64,6 @@ app.post('/api/new_member', async (c) => {
   await kv.set(['users', username], { username, hashedPassword });
 
   const id = await getNextId();
-  //フォームデータにIDと作成日時を追加
-  form_Data['id'] = id;
-  // form_Data['createdAt'] = new Date().toISOString();
 
   //一つにまとめる
   const userData = {
@@ -86,7 +83,20 @@ app.post('/api/new_member', async (c) => {
   await kv.set(['usersById', id], userData);
 
   c.status(201); // 201 Created
-  return c.json({ message: `ユーザー「${username}」を登録しました` });
+
+  // 返信用のデータをコピーして作成
+  const responseUser = {
+    id: id,
+    username: username,
+    hashedPassword: hashedPassword,
+    email: form_Data['email'],
+    HB: form_Data['HB'],
+    image: form_Data['image'] instanceof File ? form_Data['image'].name : null,
+    createdAt: new Date().toISOString()
+  };
+  delete responseUser.hashedPassword;
+
+  return c.json({ message: `ユーザー「${username}」を登録しました`, user: responseUser });
 });
 
 Deno.serve(app.fetch);

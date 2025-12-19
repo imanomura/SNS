@@ -6,7 +6,7 @@ function Registraapp() {
     email: '',
     password: '',
     HB: '',
-    form_image: null,
+    // form_image: null,
     // count: 0,
     uploadImage: null,
     data: null,
@@ -15,7 +15,7 @@ function Registraapp() {
     //オブジェクトとしてにする？
 
     // /AI
-    form_image(e) {
+    onFileChange(e) {
       this.file = e.target.files[0];
       this.uploadImage = URL.createObjectURL(this.file);
     },
@@ -60,7 +60,7 @@ function Registraapp() {
       this.password = '';
       this.email = '';
       this.HB = '';
-      this.form_image = null;
+      // this.form_image = null;
       // this.count = 0;
       this.uploadImage = null;
       // this.data = null;

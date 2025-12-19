@@ -17,7 +17,7 @@
         <label>メールアドレス：<input type="email" v-model="email" /></label> <br />
         <label>パスワード：<input type="password" v-model="password" /></label> <br />
         <label>生年月日：<input type="date" v-model="HB" /></label><br />
-        <label>プロフィール画像:<input type="file" accept=".png, .jpg, .jpeg" @change="form_image" /></label><br />
+        <label>プロフィール画像:<input type="file" accept=".png, .jpg, .jpeg" @change="onFileChange" /></label><br />
         <label>
           <figure><img :src="uploadImage" height="200" v-if="uploadImage" /></figure></label
         ><br />

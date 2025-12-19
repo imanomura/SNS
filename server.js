@@ -16,8 +16,6 @@ const JWT_SECRET = Deno.env.get('JWT_SECRET');
 
 app.use('/*', serveStatic({ root: './public' }));
 
-Deno.serve(app.fetch);
-
 //新しいIDを取得する関数
 async function getNextId() {
   // userIdコレクション用のカウンタのキー
@@ -63,8 +61,6 @@ app.post('/api/new_member', async (c) => {
   const hashedPassword = await hash(password);
   await kv.set(['users', username], { username, hashedPassword });
 
-  // const form_Data = body.form_Data;
-
   const id = await getNextId();
   //フォームデータにIDと作成日時を追加
   form_Data['id'] = id;
@@ -77,17 +73,18 @@ app.post('/api/new_member', async (c) => {
     hashedPassword: hashedPassword,
     email: form_Data['email'],
     HB: form_Data['HB'],
-    image: form_Data['image'],
+    // image: form_Data['image'],
+    // 【修正】画像そのものではなく、ファイル名(name)だけを保存するように変更
+    // (画像データ自体はFileオブジェクトなので、そのままKVに入れると容量オーバーしやすい)
+    image: form_Data['image'] instanceof File ? form_Data['image'].name : null,
     createdAt: new Date().toISOString()
   };
 
   await kv.set(['users', username], userData);
   await kv.set(['usersById', id], userData);
-  // await kv.set(['users', id]);
-  // c.status(201);
-  // c.header('Location', `/api/new_member/${id}`);
-  // return c.json({ form_Data });
 
   c.status(201); // 201 Created
   return c.json({ message: `ユーザー「${username}」を登録しました` });
 });
+
+Deno.serve(app.fetch);

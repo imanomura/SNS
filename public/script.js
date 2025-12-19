@@ -38,11 +38,9 @@ function Registraapp() {
       }
       const form_Data = new FormData();
       form_Data.append('username', this.username);
-      // form_Data.append('title', 'new_member');
       form_Data.append('email', this.email);
       form_Data.append('password', this.password);
       form_Data.append('HB', this.HB);
-      // form_Data.append('new_image', this.form_image);
       form_Data.append('image', this.file);
       form_Data.append('completed', 'false');
       // const url = 'https://httpbin.org/post';

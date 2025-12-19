@@ -10,26 +10,51 @@
   <body>
     <p>Hello,World!</p>
     <p>新機会員登録</p>
-    <form v-scope="Registraapp()">
-      <label>ユーザー名：<input type="text" v-model="form_username" /></label><br />
-      <label>メールアドレス：<input type="email" v-model="form_email" /></label> <br />
-      <label>パスワード：<input type="password" v-model="form_pass" /></label> <br />
-      <label>生年月日：<input type="date" v-model="form_BH" /></label><br />
-      <label>プロフィール画像:<input type="file" accept=".png, .jpg, .jpeg" @change="form_image" /></label><br />
-      <label>
-        <figure><img :src="uploadImage" height="200" v-if="uploadImage" /></figure></label
-      ><br />
+    <div v-scope="Registraapp()">
+    <!-- <form v-scope="Registraapp()"> -->
+      <form>
+        <label>ユーザー名：<input type="text" v-model="username" /></label><br />
+        <label>メールアドレス：<input type="email" v-model="email" /></label> <br />
+        <label>パスワード：<input type="password" v-model="password" /></label> <br />
+        <label>生年月日：<input type="date" v-model="HB" /></label><br />
+        <label>プロフィール画像:<input type="file" accept=".png, .jpg, .jpeg" @change="form_image" /></label><br />
+        <label>
+          <figure><img :src="uploadImage" height="200" v-if="uploadImage" /></figure></label
+        ><br />
 
-      <button type="button">ゲスト</button>
-      <button type="submit" @click="submitData">登録</button>
-    </form>
+        <button type="button">ゲスト</button>
+        <button type="submit" @click="submitData">登録</button>
+      </form>
 
     
       <table>
         <tr>
           <td>メールアドレス</td><td>パスワード</td><td>生年月日</td><td>プロフィール画像</td>
         </tr>
-      <table> 
+      <table>
+        <div v-if="data">
+        <h3>登録完了データ（サーバーからの返信）</h3>
+        <table border="1">
+          <table>
+            <tr>
+              <th>ID</th>
+              <th>ユーザー名</th>
+              <th>メールアドレス</th>
+              <th>生年月日</th>
+            </tr>
+          </table>
+          <table>
+            <tr>
+              <td>{{ data.user.id }}</td>
+              <td>{{ data.user.username }}</td>
+              <td>{{ data.user.email }}</td>
+              <td>{{ data.user.HB }}</td>
+            </tr>
+          </table>
+        </table>
+        <p v-if="data.message">{{ data.message }}</p>
+      </div>
+    </div>
 
   </body>
   <script src="script.js"></script>

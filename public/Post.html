@@ -11,7 +11,7 @@
     <div v-scope="PostApp()" @vue:mounted="mounted">
       <p>投稿画面</p>
       <div id="Post">
-        <input type="text" v-model="postContent"></input>
+        <textarea v-model="postContent"></textarea>
         <button @click.prevent="post">投稿</button>
       </div>
     </div>

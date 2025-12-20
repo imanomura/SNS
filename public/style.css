@@ -110,8 +110,19 @@ body {
 /*上記までがハンバーガーメニューのCSS*/
 
 /* 投稿画面のinputテキストの枠線や背景を削除 */
-/* #Post input[type='text'] {
-  background-color: transparent;
+/*テキストエリアで複数行使えるように*/
+#Post textarea {
+  /* width: 100%; */
+  display: inline-block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #999;
+  box-sizing: border-box;
+  background: #f2f2f2;
+  margin: 0.5em 0;
+  line-height: 1.5;
+  height: 6em;
+  /* background-color: transparent;
   border: none;
-  outline: none;
-} */
+  outline: none; */
+}

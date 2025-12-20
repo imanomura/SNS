@@ -91,4 +91,27 @@ body {
   display: block;
   font-size: 18px;
 }
+
+/*ハンバーガーメニューのボタンを文字のように見えるようにするcss*/
+/* メニューの中のボタンを「ただの文字」のように見せる設定 */
+.menu button {
+  background-color: transparent; /* 背景を透明にする */
+  border: none; /* 枠線を消す */
+  cursor: pointer; /* カーソルを指の形にする */
+  outline: none; /* クリック時の青い枠線を消す */
+  padding: 0; /* 余計な余白を消す */
+  appearance: none; /* ブラウザ標準の見た目を無効化 */
+
+  /* 文字のスタイルを親要素（liやnav）に合わせる */
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit; /* 文字色を親の指定に従わせる */
+}
 /*上記までがハンバーガーメニューのCSS*/
+
+/* 投稿画面のinputテキストの枠線や背景を削除 */
+/* #Post input[type='text'] {
+  background-color: transparent;
+  border: none;
+  outline: none;
+} */

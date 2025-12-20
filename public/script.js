@@ -1,18 +1,5 @@
 'use strict';
 
-// ハンバーガーメニュー
-// document.addEventListener('DOMContentLoaded', function () {
-//   const hamburger = document.getElementById('hamburger');
-//   const menu = document.getElementById('menu');
-
-//   hamburger.addEventListener('click', function () {
-//     // メニューの開閉
-//     menu.classList.toggle('open');
-//     // ボタンのアニメーション（バツ印など）
-//     hamburger.classList.toggle('active');
-//   });
-// });
-
 function Registraapp() {
   return {
     username: '',
@@ -117,11 +104,67 @@ function Registraapp() {
       if (localStorage.jwt) {
         delete localStorage.jwt;
         this.result = 'ログアウトしました';
+        window.location.href = 'New_member.html';
       } else {
         this.result = 'ログインしていません';
+        window.location.href = 'New_member.html';
       }
     }
   };
 }
 
-// PetiteVue.createApp(Registraapp).mount();
+function HomeApp() {
+  return {
+    username: '',
+    result: '',
+    isOpen: false,
+    async mounted() {
+      await this.getProfile();
+    },
+    //プロフィールの取得
+    async getProfile() {
+      // localStorageからトークンを取得
+      const token = localStorage.jwt;
+      if (!token) {
+        this.result = 'ログインしてください';
+        return;
+      }
+      // GETリクエスト
+      const res = await fetch('/api/profile', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.result = 'ユーザー：' + data.username;
+        // this.username = data.username;
+      } else {
+        this.result = 'トークンが異なります';
+      }
+    },
+    /* ログアウト */
+    async logout() {
+      if (localStorage.jwt) {
+        delete localStorage.jwt;
+        this.result = 'ログアウトしました';
+        window.location.href = 'New_member.html';
+      } else {
+        this.result = 'ログインしていません';
+        window.location.href = 'New_member.html';
+      }
+    },
+    //投稿
+    async gopost() {
+      window.location.href = 'Post.html';
+    }
+  };
+}
+
+function PostApp() {
+  return {
+    postContent: '',
+    async mounted() {}
+  };
+}

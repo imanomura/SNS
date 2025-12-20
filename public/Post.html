@@ -8,7 +8,13 @@
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
   <body>
-    <p>投稿画面</p>
+    <div v-scope="PostApp()" @vue:mounted="mounted">
+      <p>投稿画面</p>
+      <div id="Post">
+        <input type="text" v-model="postContent"></input>
+        <button @click.prevent="post">投稿</button>
+      </div>
+    </div>
   </body>
   <script src="script.js"></script>
 </html>

@@ -110,13 +110,6 @@
               {{ post.displayName }}
             </div>
             <div style="flex-grow: 1">
-              <!-- <div
-                style="font-weight: bold; font-size: 0.95em; cursor: pointer; display: inline-block"
-                @click="goToUser(post.userId)"
-              >
-                {{ post.displayName }}
-              </div> -->
-
               <div
                 v-if="post.parent"
                 style="
@@ -137,6 +130,69 @@
               <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">
                 {{ post.content }}
               </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px; margin-top: 5px; margin-bottom: 8px">
+              <button
+                @click.stop="toggleReaction(post, 'like')"
+                style="
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 0;
+                  font-size: 0.9em;
+                  transition: color 0.2s;
+                "
+                :style="{ color: post.isLiked ? '#e91e63' : '#888', fontWeight: post.isLiked ? 'bold' : 'normal' }"
+              >
+                <span v-if="post.isLiked">❤️</span>
+                <span v-else style="font-size: 1.1em">♡</span>
+                <span v-if="post.likeCount > 0">{{ post.likeCount }}</span>
+                <span v-else style="font-size: 0.8em">いいね</span>
+              </button>
+
+              <button
+                @click.stop="toggleReaction(post, 'sorena')"
+                style="
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 0;
+                  font-size: 0.9em;
+                  transition: color 0.2s;
+                "
+                :style="{ color: post.isSorena ? '#2196f3' : '#888', fontWeight: post.isSorena ? 'bold' : 'normal' }"
+              >
+                <span>👉</span>
+                <span v-if="post.sorenaCount > 0">{{ post.sorenaCount }}</span>
+                <span v-else style="font-size: 0.8em">それな</span>
+              </button>
+
+              <button
+                @click.stop="toggleReaction(post, 'hmm')"
+                style="
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                  padding: 0;
+                  font-size: 0.9em;
+                  transition: color 0.2s;
+                "
+                :style="{ color: post.isHmm ? '#ff9800' : '#888', fontWeight: post.isHmm ? 'bold' : 'normal' }"
+              >
+                <span>{{ post.isHmm ? '🤔' : '😶' }}</span>
+                <span v-if="post.hmmCount > 0">{{ post.hmmCount }}</span>
+                <span v-else style="font-size: 0.8em">うーん</span>
+              </button>
             </div>
             <button
               @click.stop="goReply(post.id)"
@@ -215,7 +271,7 @@
             <small class="post-date" style="color: gray"> {{ new Date(post.createdAt).toLocaleString() }} </small>
           </div>
 
-          <div v-if="post.userId === username" style="position: absolute; top: 0; right: 0">
+          <div v-if="post.userId === currentUserId" style="position: absolute; top: 0; right: 0">
             <button
               @click="toggleMenu(post.id)"
               style="background: none; border: none; cursor: pointer; font-size: 1.2em; padding: 0 5px; color: #555"

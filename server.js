@@ -247,7 +247,7 @@ app.post('/api/post_message', async (c) => {
   return c.json({ message: 'メッセージを保存しました', id: message.id });
 });
 
-/* --- タイムライン取得（ここを整理しました） --- */
+/* --- タイムライン取得（リアクション対応版） --- */
 app.get('/api/posts', async (c) => {
   const targetUser = c.req.query('user');
   const type = c.req.query('type');
@@ -256,18 +256,13 @@ app.get('/api/posts', async (c) => {
   const me = payload.sub;
 
   // 1. フォローリストの準備
-  // 「フォロー中」タブの場合のみ、フォローしている人のリスト(Set)を作る
   let followingSet = null;
-
   if (type === 'following') {
     followingSet = new Set();
     const iter = kv.list({ prefix: ['follows', me] });
     for await (const item of iter) {
       const target = item.key[2];
-      // 自分自身はリストに入れない
-      if (target !== me) {
-        followingSet.add(target);
-      }
+      if (target !== me) followingSet.add(target);
     }
   }
 
@@ -277,61 +272,69 @@ app.get('/api/posts', async (c) => {
   for await (const item of items) {
     const post = item.value;
 
-    // --- ★ここからフィルタリング処理を修正 ---
-
-    // 1. 「じぶんだけ」モードの場合
+    // --- フィルタリング ---
     if (type === 'private') {
-      // 自分の投稿、かつ visibility が private のものだけ許可
       if (post.userId !== me) continue;
       if (post.visibility !== 'private') continue;
-    }
-    // 2. それ以外のモード（おすすめ、フォロー中、プロフィール）
-    else {
-      // visibility が private のものは、他人は絶対に見られない
-      // (自分が見る場合でも、通常のタイムラインには混ぜない仕様にします)
+    } else {
       if (post.visibility === 'private') continue;
     }
 
-    // A. プロフィール画面用: 特定ユーザーの投稿のみ
     if (targetUser) {
       if (post.userId !== targetUser) continue;
     }
 
-    // B. ホーム画面（フォロー中タブ）用
     if (type === 'following') {
-      // B-1: 自分の投稿は表示しない
       if (post.userId === me) continue;
+      if (!followingSet || !followingSet.has(post.userId)) continue;
+    }
 
-      // B-2: フォローリストが空、またはフォローしていない人の投稿は表示しない
-      // (followingSet が null または、Setの中にuserIdがない場合はスキップ)
-      if (!followingSet || !followingSet.has(post.userId)) {
-        continue;
+    // --- ★ここが追加箇所: リアクションの集計 ---
+    // この投稿に対するリアクションを全て取得して数える
+    const reactionsIter = kv.list({ prefix: ['reactions', post.id] });
+
+    let likeCount = 0;
+    let sorenaCount = 0;
+    let hmmCount = 0;
+
+    let isLiked = false;
+    let isSorena = false;
+    let isHmm = false;
+
+    for await (const r of reactionsIter) {
+      // keyの構造: ['reactions', postId, type, userId]
+      const rType = r.key[2];
+      const rUser = r.key[3];
+
+      if (rType === 'like') likeCount++;
+      if (rType === 'sorena') sorenaCount++;
+      if (rType === 'hmm') hmmCount++;
+
+      // 自分が押したかどうか
+      if (rUser === me) {
+        if (rType === 'like') isLiked = true;
+        if (rType === 'sorena') isSorena = true;
+        if (rType === 'hmm') isHmm = true;
       }
     }
 
-    // ★追加: 返信元（親投稿）の情報を取得する処理
+    // 親投稿情報の取得
     let parentInfo = null;
     if (post.parentId) {
-      // 親投稿のデータを取得
       const parentEntry = await kv.get(['messages', post.parentId]);
       const parentMsg = parentEntry.value;
-
       if (parentMsg) {
-        // 親投稿のユーザー情報を取得
         const parentUserEntry = await kv.get(['users', parentMsg.userId]);
         const parentUser = parentUserEntry.value;
-
         parentInfo = {
           displayName: parentUser ? parentUser.displayName || parentUser.username : '不明なユーザー',
           content: parentMsg.content
         };
       } else {
-        // 親投稿が削除されていた場合
         parentInfo = { displayName: '削除された投稿', content: 'この投稿は削除されました' };
       }
     }
 
-    // --- ユーザー情報の結合 ---
     const userEntry = await kv.get(['users', post.userId]);
     const userData = userEntry.value;
 
@@ -342,8 +345,15 @@ app.get('/api/posts', async (c) => {
       content: post.content,
       createdAt: post.createdAt,
       userImage: userData && userData.image ? `/uploads/${userData.image}` : null,
-      visibility: post.visibility, // フロントでアイコン表示などに使うかも
-      parent: parentInfo // ★追加: これをフロントエンドに送る
+      visibility: post.visibility,
+      parent: parentInfo,
+      // ★フロントへ送るデータに追加
+      likeCount,
+      sorenaCount,
+      hmmCount,
+      isLiked,
+      isSorena,
+      isHmm
     };
     messages.push(PostData);
   }
@@ -490,6 +500,30 @@ app.get('/api/thread/:id', async (c) => {
     target: enrichedTarget,
     replies: replies
   });
+});
+
+/* --- ★追加: リアクション（いいね・それな・うーん）の切り替え --- */
+app.post('/api/react', async (c) => {
+  const body = await c.req.json();
+  const { postId, type } = body; // type: 'like', 'sorena', 'hmm'
+
+  const payload = c.get('jwtPayload');
+  const userId = payload.sub;
+
+  // 保存するキー: ['reactions', 投稿ID, リアクションタイプ, ユーザーID]
+  const key = ['reactions', postId, type, userId];
+
+  const existing = await kv.get(key);
+
+  if (existing.value) {
+    // 既に押してある場合は削除（取り消し）
+    await kv.delete(key);
+    return c.json({ action: 'removed', type });
+  } else {
+    // 押していない場合は追加
+    await kv.set(key, { createdAt: new Date().toISOString() });
+    return c.json({ action: 'added', type });
+  }
 });
 
 Deno.serve(app.fetch);

@@ -119,6 +119,7 @@ function Registraapp() {
 function HomeApp() {
   return {
     username: '',
+    currentUserId: '', // ★追加：判定用（ID比較用）
     result: '',
     isOpen: false,
     posts: [],
@@ -237,6 +238,56 @@ function HomeApp() {
       });
     },
 
+    // リアクションボタンを押した時の処理
+    async toggleReaction(post, type) {
+      const token = localStorage.jwt;
+
+      // 見た目を即座に更新（サクサク動くように見せる）
+      // プロパティ名を決定
+      let isActiveKey, countKey;
+      if (type === 'like') {
+        isActiveKey = 'isLiked';
+        countKey = 'likeCount';
+      } else if (type === 'sorena') {
+        isActiveKey = 'isSorena';
+        countKey = 'sorenaCount';
+      } else {
+        isActiveKey = 'isHmm';
+        countKey = 'hmmCount';
+      }
+
+      // 現在の状態を反転
+      if (post[isActiveKey]) {
+        post[isActiveKey] = false;
+        post[countKey]--;
+      } else {
+        post[isActiveKey] = true;
+        post[countKey]++;
+      }
+
+      // サーバーに送信
+      const res = await fetch('/api/react', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ postId: post.id, type: type })
+      });
+
+      if (!res.ok) {
+        // エラーが起きたら元に戻す
+        if (post[isActiveKey]) {
+          post[isActiveKey] = false;
+          post[countKey]--;
+        } else {
+          post[isActiveKey] = true;
+          post[countKey]++;
+        }
+        alert('通信エラーが発生しました');
+      }
+    },
+
     //プロフィールの取得
     async getProfile() {
       // localStorageからトークンを取得
@@ -257,7 +308,10 @@ function HomeApp() {
       });
       if (res.ok) {
         const data = await res.json();
-        this.username = data.displayName; // 表示名を使う
+        // ▼ ここを修正 ▼
+        this.username = data.displayName; // 表示名（そのまま）
+        this.currentUserId = data.username; // ★追加：判定用にID（username）を保存
+        // ▲ ここまで ▲
         this.result = 'ユーザー：' + data.displayName;
       } else {
         this.result = 'トークンが異なります';

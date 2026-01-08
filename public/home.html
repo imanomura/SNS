@@ -16,11 +16,94 @@
       <div class="timeline">
         <div v-if="posts.length === 0">まだ投稿はありません</div>
 
-        <div v-for="post in posts" :key="post.id" class="post-card">
-          <p class="post-content">{{ post.content }}</p>
-          <small class="post-date">{{ new Date(post.createdAt).toLocaleString() }}</small>
+        <div
+          v-for="post in posts"
+          :key="post.id"
+          class="post-card"
+          style="
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            position: relative;
+          "
+        >
+          <div style="flex-shrink: 0">
+            <img
+              v-if="post.userImage"
+              :src="post.userImage"
+              style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ccc"
+              alt="icon"
+            />
+
+            <div
+              v-else
+              style="
+                width: 40px;
+                height: 40px;
+                background-color: #ccc;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+              "
+            >
+              {{ post.userId ? post.userId.charAt(0) : '?' }}
+            </div>
+          </div>
+          <div style="flex-grow: 1">
+            <div style="font-weight: bold; font-size: 0.95em">{{ post.userId }}</div>
+            <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em">{{ post.content }}</p>
+            <small class="post-date" style="color: gray"> {{ new Date(post.createdAt).toLocaleString() }} </small>
+          </div>
+          <div v-if="post.userId === username" style="position: absolute; top: 0; right: 0">
+            <button
+              @click="toggleMenu(post.id)"
+              style="background: none; border: none; cursor: pointer; font-size: 1.2em; padding: 0 5px; color: #555"
+            >
+              ⋮
+            </button>
+
+            <div
+              v-if="activeMenuId === post.id"
+              style="
+                position: absolute;
+                top: 20px;
+                right: 0;
+                background: white;
+                border: 1px solid #ddd;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+                border-radius: 4px;
+                z-index: 10;
+                min-width: 80px;
+              "
+            >
+              <button
+                @click="deletePost(post.id)"
+                style="
+                  display: block;
+                  width: 100%;
+                  text-align: left;
+                  padding: 8px 10px;
+                  background: none;
+                  border: none;
+                  cursor: pointer;
+                  color: red;
+                  font-size: 0.9em;
+                "
+                onmouseover="this.style.background='#f0f0f0'"
+                onmouseout="this.style.background='none'"
+              >
+                削除
+              </button>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!--時間あればスタイルCSS移動させる-->
 
       <!--投稿ボタン-->
       <button @click.prevent="gopost">投稿</button>

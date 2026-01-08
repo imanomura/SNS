@@ -49,6 +49,10 @@ function Registraapp() {
       });
       const obj = await res.json();
       this.data = obj;
+      if (obj.token) {
+        localStorage.setItem('jwt', obj.token); // ★キー名は 'jwt' で統一した方が良いです（他の場所で localStorage.jwt を使っているため）
+        window.location.href = 'home.html'; //ホーム画面へ移動
+      }
 
       console.log(JSON.stringify(this.data, null, 2));
 
@@ -118,6 +122,7 @@ function HomeApp() {
     result: '',
     isOpen: false,
     posts: [],
+    activeMenuId: null,
     async mounted() {
       await this.getProfile();
       await this.getPosts();
@@ -143,9 +148,36 @@ function HomeApp() {
       if (res.ok) {
         const data = await res.json();
         this.result = 'ユーザー：' + data.username;
-        // this.username = data.username;
+        this.username = data.username;
       } else {
         this.result = 'トークンが異なります';
+      }
+    },
+    // ★追加: メニューの開閉切り替え
+    toggleMenu(postId) {
+      if (this.activeMenuId === postId) {
+        this.activeMenuId = null; // 既に開いていれば閉じる
+      } else {
+        this.activeMenuId = postId; // その投稿のメニューを開く
+      }
+    },
+
+    // ★追加: 削除機能
+    async deletePost(postId) {
+      if (!confirm('本当に削除しますか？')) return;
+
+      const token = localStorage.jwt;
+      const res = await fetch(`/api/messages/${postId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        // 成功したら画面からも消す
+        this.posts = this.posts.filter((p) => p.id !== postId);
+        this.activeMenuId = null; // メニューを閉じる
+      } else {
+        alert('削除に失敗しました');
       }
     },
 

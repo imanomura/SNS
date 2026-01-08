@@ -11,9 +11,6 @@
     <div v-scope="HomeApp()" @vue:mounted="mounted">
       <p>タイムライン</p>
 
-      <!--検索機能-->
-      <p>タイムライン</p>
-
       <div style="margin-bottom: 20px; display: flex; gap: 5px">
         <input
           type="text"
@@ -35,16 +32,37 @@
           検索
         </button>
       </div>
-      <!--投稿ボタン-->
-      <button @click.prevent="gopost">投稿</button>
-      <p>ようこそ{{username}}</p>
-      <p>ようこそ{{result}}</p>
+
+      <button @click.prevent="gopost" style="margin-bottom: 10px">投稿</button>
+
+      <div style="display: flex; justify-content: space-between; align-items: center">
+        <p>ようこそ {{ username }}</p>
+        <p>{{ result }}</p>
+      </div>
+
+      <div style="display: flex; border-bottom: 1px solid #ccc; margin-bottom: 20px">
+        <button
+          @click="switchTab('all')"
+          :style="currentTab === 'all' 
+            ? 'flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #333; font-weight: bold; cursor: pointer;' 
+            : 'flex: 1; padding: 10px; background: none; border: none; color: #888; cursor: pointer;'"
+        >
+          おすすめ
+        </button>
+        <button
+          @click="switchTab('following')"
+          :style="currentTab === 'following' 
+            ? 'flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #333; font-weight: bold; cursor: pointer;' 
+            : 'flex: 1; padding: 10px; background: none; border: none; color: #888; cursor: pointer;'"
+        >
+          フォロー中
+        </button>
+      </div>
 
       <div class="timeline">
-        <div v-if="filteredPosts.length === 0">
-          {{ filterWord ? '検索結果が見つかりません' : 'まだ投稿はありません' }}
+        <div v-if="filteredPosts.length === 0" style="text-align: center; color: gray; padding: 20px">
+          {{ currentTab === 'following' ? 'フォローしている人の投稿はありません' : '投稿がありません' }}
         </div>
-        <div v-if="posts.length === 0">まだ投稿はありません</div>
 
         <div
           v-for="post in filteredPosts"
@@ -89,12 +107,11 @@
               @click="goToUser(post.userId)"
             >
               {{ post.displayName }}
-              <span style="font-size: 0.8em; color: #888; font-weight: normal">@{{ post.userId }}</span>
             </div>
-
-            <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em">{{ post.content }}</p>
+            <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">{{ post.content }}</p>
             <small class="post-date" style="color: gray"> {{ new Date(post.createdAt).toLocaleString() }} </small>
           </div>
+
           <div v-if="post.userId === username" style="position: absolute; top: 0; right: 0">
             <button
               @click="toggleMenu(post.id)"
@@ -140,9 +157,6 @@
         </div>
       </div>
 
-      <!--時間あればスタイルCSS移動させる-->
-
-      <!--ハンバーガーメニュー-->
       <div class="hamburger" id="hamburger" @click="isOpen = !isOpen" :class="{ active: isOpen }">
         <span></span>
         <span></span>

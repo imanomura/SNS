@@ -10,41 +10,26 @@ import { ensureDir } from 'jsr:@std/fs';
 import { hash, verify } from 'jsr:@felix/bcrypt';
 
 const app = new Hono();
-// ★ここに追加！
 // 「/」にアクセスが来たら、「/New_member.html」に転送する
 app.get('/', (c) => c.redirect('/New_member.html'));
 
-//データベースの有効か
-// const kv = await Deno.openKv();
 // プロジェクトフォルダ内に 'my_database' というファイルを作って保存するよう指定
 const kv = await Deno.openKv('./my_database');
 
-//秘密鍵
-// サーバーの秘密鍵
-
-// 修正後（文字は何でもいいですが、忘れないように）
+// 秘密鍵
 const JWT_SECRET = Deno.env.get('JWT_SECRET') || 'himitsu-no-key';
 
 app.use('/*', serveStatic({ root: './public' }));
 
 //新しいIDを取得する関数
 async function getNextId() {
-  // userIdコレクション用のカウンタのキー
   const key = ['counter', 'userId'];
-
-  // アトミック処理の中でカウンターに1を足す
   const res = await kv.atomic().sum(key, 1n).commit();
-
-  // 確認
   if (!res.ok) {
     console.error('IDの生成に失敗しました。');
     return null;
   }
-
-  // カウンターをgetして…
   const counter = await kv.get(key);
-
-  // Number型としてreturnする
   return Number(counter.value);
 }
 
@@ -53,43 +38,32 @@ app.post('/api/new_member', async (c) => {
   const form_Data = await c.req.parseBody();
   const username = form_Data['username'];
   const password = form_Data['password'];
-  // 登録情報の取得
+
   if (!username || !password) {
-    c.status(400); // 400 Bad Request
+    c.status(400);
     return c.json({ message: 'ユーザー名とパスワードは必須です' });
   }
-  // 同じユーザー名がデータベースにないか確認
+
   const userExists = await kv.get(['users', username]);
   if (userExists.value) {
-    c.status(409); // 409 Conflict
+    c.status(409);
     return c.json({ message: 'このユーザー名は既に使用されています' });
   }
-  // パスワードをハッシュ化してユーザー名とともにデータベースに記録
-  const hashedPassword = await hash(password);
-  // await kv.set(['users', username], { username, hashedPassword });
 
+  const hashedPassword = await hash(password);
   const id = await getNextId();
 
-  // 4. 画像ファイルの保存処理（ここを追加！）
   let imageFileName = null;
   const imageFile = form_Data['image'];
 
   if (imageFile instanceof File && imageFile.size > 0) {
-    // ファイル名が被らないようにタイムスタンプなどをつけると安全
     const fileName = `${Date.now()}_${imageFile.name}`;
-
-    // 画像を保存するフォルダを作成（なければ作る）
     await ensureDir('./public/uploads');
-
-    // ファイルの中身を読み込んで保存
     const arrayBuffer = await imageFile.arrayBuffer();
     await Deno.writeFile(`./public/uploads/${fileName}`, new Uint8Array(arrayBuffer));
-
-    // データベースには保存した「ファイル名」を記録
     imageFileName = fileName;
   }
 
-  //一つにまとめる
   const userData = {
     id: id,
     username: username,
@@ -97,10 +71,6 @@ app.post('/api/new_member', async (c) => {
     hashedPassword: hashedPassword,
     email: form_Data['email'],
     HB: form_Data['HB'],
-    // image: form_Data['image'],
-    // 【修正】画像そのものではなく、ファイル名(name)だけを保存するように変更
-    // (画像データ自体はFileオブジェクトなので、そのままKVに入れると容量オーバーしやすい)
-    // image: form_Data['image'] instanceof File ? form_Data['image'].name : null,
     image: imageFileName,
     createdAt: new Date().toISOString()
   };
@@ -115,16 +85,14 @@ app.post('/api/new_member', async (c) => {
   };
   const token = await sign(payload, JWT_SECRET);
 
-  c.status(201); // 201 Created
+  c.status(201);
 
-  // 返信用のデータをコピーして作成
   const responseUser = {
     id: id,
     username: username,
     hashedPassword: hashedPassword,
     email: form_Data['email'],
     HB: form_Data['HB'],
-    // image: form_Data['image'] instanceof File ? form_Data['image'].name : null,
     image: imageFileName,
     createdAt: new Date().toISOString()
   };
@@ -133,13 +101,12 @@ app.post('/api/new_member', async (c) => {
   return c.json({
     message: `ユーザー「${username}」を登録し、ログインしました`,
     user: responseUser,
-    token: token // これを追加！
+    token: token
   });
 });
 
 /*** ログイン ***/
 app.post('/api/login', async (c) => {
-  // ...
   const { username, password } = await c.req.json();
   const userEntry = await kv.get(['users', username]);
   const user = userEntry.value;
@@ -147,22 +114,17 @@ app.post('/api/login', async (c) => {
     c.status(401);
     return c.json({ message: 'ユーザー名が無効です。' });
   }
-  // ハッシュ化されたパスワードと比較
   const verified = await verify(password, user.hashedPassword);
   if (!verified) {
-    c.status(401); // 401 Unauthorized
+    c.status(401);
     return c.json({ message: 'パスワードが無効です' });
   }
-  // JWTのペイロードを設定
   const payload = {
-    sub: user.username, // ユーザー識別子
-    // name: user.username,  // 表示用のユーザー名
-    iat: Math.floor(Date.now() / 1000), // 発行日時
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24時間有効
+    sub: user.username,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24
   };
-  // JWT（トークン）を生成
   const token = await sign(payload, JWT_SECRET);
-  // レスポンス
   return c.json({
     message: 'ログイン成功',
     username: user.username,
@@ -174,38 +136,53 @@ app.post('/api/login', async (c) => {
 app.use('/api/*', jwt({ secret: JWT_SECRET }));
 
 /*** プロフィール ***/
-// app.get('/api/profile', async (c) => {
-//   /* ここまで到達できた時点でログインできている */
-//   // ...
-//   // ミドルウェアで記録されたキー「jwtPayload」の値を取得
-//   const payload = c.get('jwtPayload');
-
-//   // JWTの本体からユーザー名を取得
-//   const username = payload.sub;
-
-//   return c.json({ username });
-// });
 app.get('/api/user_info', async (c) => {
-  // URLクエリ ?user=xxx があればその人を、なければ自分を返す
   const queryUser = c.req.query('user');
   const payload = c.get('jwtPayload');
-  const targetUsername = queryUser || payload.sub;
+  const me = payload.sub;
+  const targetUsername = queryUser || me;
 
   const userEntry = await kv.get(['users', targetUsername]);
   const user = userEntry.value;
 
   if (!user) return c.json({ message: 'ユーザーが見つかりません' }, 404);
 
+  // フォロー数（自分自身が含まれていたら除外する）
+  const followingIter = kv.list({ prefix: ['follows', targetUsername] });
+  let followingCount = 0;
+  for await (const item of followingIter) {
+    if (item.key[2] === targetUsername) continue;
+    followingCount++;
+  }
+
+  // フォロワー数（自分自身が含まれていたら除外する）
+  const followersIter = kv.list({ prefix: ['followers', targetUsername] });
+  let followersCount = 0;
+  for await (const item of followersIter) {
+    if (item.key[2] === targetUsername) continue;
+    followersCount++;
+  }
+
+  // 自分がこの人をフォローしているか確認
+  let isFollowing = false;
+  if (me !== targetUsername) {
+    const check = await kv.get(['follows', me, targetUsername]);
+    isFollowing = !!check.value;
+  }
+
   return c.json({
     username: user.username,
-    displayName: user.displayName || user.username, // 表示名
+    displayName: user.displayName || user.username,
     image: user.image ? `/uploads/${user.image}` : null,
-    bio: user.bio || '自己紹介はまだありません', // 自己紹介
-    isMe: payload.sub === user.username // 自分かどうかフラグ
+    bio: user.bio || '自己紹介はまだありません',
+    isMe: me === user.username,
+    followingCount,
+    followersCount,
+    isFollowing
   });
 });
 
-/* --- ★追加: プロフィール更新 --- */
+/* --- プロフィール更新 --- */
 app.post('/api/profile/update', async (c) => {
   const payload = c.get('jwtPayload');
   const currentUsername = payload.sub;
@@ -215,50 +192,40 @@ app.post('/api/profile/update', async (c) => {
   const newBio = formData['bio'];
   const imageFile = formData['image'];
 
-  // データベースから現在の情報を取得
   const key = ['users', currentUsername];
   const userEntry = await kv.get(key);
   const userData = userEntry.value;
 
   if (!userData) return c.json({ message: 'ユーザー不在' }, 404);
 
-  // 情報を更新
   if (newDisplayName) userData.displayName = newDisplayName;
   if (newBio) userData.bio = newBio;
 
-  // 画像がアップロードされていれば保存して更新
   if (imageFile instanceof File && imageFile.size > 0) {
     const fileName = `${Date.now()}_${imageFile.name}`;
     await ensureDir('./public/uploads');
     const arrayBuffer = await imageFile.arrayBuffer();
     await Deno.writeFile(`./public/uploads/${fileName}`, new Uint8Array(arrayBuffer));
-    userData.image = fileName; // ファイル名更新
+    userData.image = fileName;
   }
 
-  // データベース保存
   await kv.set(key, userData);
-
   return c.json({ message: 'プロフィールを更新しました' });
 });
 
 app.post('/api/post_message', async (c) => {
   const body = await c.req.json();
   const content = body.content;
-  // const id = await getNextId();
-  // content.id = id;
 
   if (!content) {
     return c.json({ message: 'メッセージが空です' }, 400);
   }
 
-  // ★ここでトークンからユーザー情報を取得
   const payload = c.get('jwtPayload');
   const userId = payload.sub;
 
-  // 3. 投稿IDの生成 (UUIDを使うのが一番確実です)
   const postId = crypto.randomUUID();
 
-  // 4. 保存するデータを作成
   const message = {
     id: postId,
     userId: userId,
@@ -266,26 +233,63 @@ app.post('/api/post_message', async (c) => {
     createdAt: new Date().toISOString()
   };
 
-  // 5. KVに保存 (キーは ['messages', postId] とする)
   await kv.set(['messages', message.id], message);
 
   c.status(201);
   c.header('Location', '/api/messages/' + message.id);
-
   return c.json({ message: 'メッセージを保存しました', id: message.id });
 });
 
+/* --- タイムライン取得（ここを整理しました） --- */
 app.get('/api/posts', async (c) => {
   const targetUser = c.req.query('user');
+  const type = c.req.query('type');
+
+  const payload = c.get('jwtPayload');
+  const me = payload.sub;
+
+  // 1. フォローリストの準備
+  // 「フォロー中」タブの場合のみ、フォローしている人のリスト(Set)を作る
+  let followingSet = null;
+
+  if (type === 'following') {
+    followingSet = new Set();
+    const iter = kv.list({ prefix: ['follows', me] });
+    for await (const item of iter) {
+      const target = item.key[2];
+      // 自分自身はリストに入れない
+      if (target !== me) {
+        followingSet.add(target);
+      }
+    }
+  }
+
   const items = kv.list({ prefix: ['messages'] });
   const messages = [];
+
   for await (const item of items) {
     const post = item.value;
-    // ユーザー絞り込みがある場合、一致しなければスキップ
-    if (targetUser && post.userId !== targetUser) continue;
 
-    // 投稿者の最新プロフィール情報を取得して結合
-    // ★ここがポイント：投稿時の名前ではなく、今のDBの名前を使う
+    // --- フィルタリング処理 ---
+
+    // A. プロフィール画面用: 特定ユーザーの投稿のみ
+    if (targetUser) {
+      if (post.userId !== targetUser) continue;
+    }
+
+    // B. ホーム画面（フォロー中タブ）用
+    if (type === 'following') {
+      // B-1: 自分の投稿は表示しない
+      if (post.userId === me) continue;
+
+      // B-2: フォローリストが空、またはフォローしていない人の投稿は表示しない
+      // (followingSet が null または、Setの中にuserIdがない場合はスキップ)
+      if (!followingSet || !followingSet.has(post.userId)) {
+        continue;
+      }
+    }
+
+    // --- ユーザー情報の結合 ---
     const userEntry = await kv.get(['users', post.userId]);
     const userData = userEntry.value;
 
@@ -299,10 +303,8 @@ app.get('/api/posts', async (c) => {
     };
     messages.push(PostData);
   }
-  // 作成日時の降順でソート
-  messages.sort((a, b) => {
-    return new Date(b.createdAt) - new Date(a.createdAt);
-  });
+
+  messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return c.json({ messages });
 });
 
@@ -310,9 +312,8 @@ app.get('/api/posts', async (c) => {
 app.delete('/api/messages/:id', async (c) => {
   const id = c.req.param('id');
   const payload = c.get('jwtPayload');
-  const currentUserId = payload.sub; // ログイン中のユーザー名
+  const currentUserId = payload.sub;
 
-  // 投稿データを取得
   const item = await kv.get(['messages', id]);
   const message = item.value;
 
@@ -320,15 +321,43 @@ app.delete('/api/messages/:id', async (c) => {
     return c.json({ message: '投稿が見つかりません' }, 404);
   }
 
-  // 本人確認 (投稿者とログインユーザーが違う場合はエラー)
   if (message.userId !== currentUserId) {
     return c.json({ message: '削除権限がありません' }, 403);
   }
 
-  // 削除実行
   await kv.delete(['messages', id]);
-
   return c.json({ message: '削除しました' });
+});
+
+/* --- フォローの切り替え --- */
+app.post('/api/follow/:targetUser', async (c) => {
+  const payload = c.get('jwtPayload');
+  const me = payload.sub;
+  const target = c.req.param('targetUser');
+
+  if (me === target) {
+    return c.json({ message: '自分自身はフォローできません' }, 400);
+  }
+
+  const followKey = ['follows', me, target];
+  const followerKey = ['followers', target, me];
+
+  const existing = await kv.get(followKey);
+
+  if (existing.value) {
+    const atom = kv.atomic();
+    atom.delete(followKey);
+    atom.delete(followerKey);
+    await atom.commit();
+    return c.json({ isFollowing: false, message: 'フォロー解除しました' });
+  } else {
+    const now = new Date().toISOString();
+    const atom = kv.atomic();
+    atom.set(followKey, { createdAt: now });
+    atom.set(followerKey, { createdAt: now });
+    await atom.commit();
+    return c.json({ isFollowing: true, message: 'フォローしました' });
+  }
 });
 
 Deno.serve(app.fetch);

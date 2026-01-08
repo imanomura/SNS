@@ -88,7 +88,7 @@ function Registraapp() {
         return;
       }
       // GETリクエスト
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/api/user_info', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
@@ -128,9 +128,35 @@ function HomeApp() {
     searchKeyword: '', // 入力欄の文字
     filterWord: '', // 検索ボタンを押した確定後の文字
 
+    // ★追加: 現在のタブ ('all' または 'following')
+    currentTab: 'all',
+
     async mounted() {
       await this.getProfile();
       await this.getPosts();
+    },
+
+    // ★追加: タブ切り替え機能
+    async switchTab(tabName) {
+      if (this.currentTab === tabName) return; // 同じなら何もしない
+      this.currentTab = tabName;
+      this.posts = []; // 一旦クリアして読み込み中感を出す
+      await this.getPosts(); // 新しいタブ条件で再取得
+    },
+    // 投稿取得 (タブに応じてパラメータを変える)
+    async getPosts() {
+      const token = localStorage.jwt;
+      // クエリパラメータ ?type=following などを付与
+      const res = await fetch(`/api/posts?type=${this.currentTab}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.posts = data.messages;
+      } else {
+        this.result = '投稿の取得に失敗しました';
+      }
     },
 
     // ★ユーザープロフィールへ移動
@@ -173,7 +199,7 @@ function HomeApp() {
         return;
       }
       // GETリクエスト
-      const res = await fetch('/api/profile', {
+      const res = await fetch('/api/user_info', {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`
@@ -264,6 +290,11 @@ function ProfileApp() {
     isMe: false, // 自分のページかどうか
     posts: [], // その人の投稿
 
+    // ★追加: フォロー関連データ
+    isFollowing: false,
+    followingCount: 0,
+    followersCount: 0,
+
     // 編集用データ
     isEditing: false,
     editName: '',
@@ -304,10 +335,38 @@ function ProfileApp() {
         this.image = data.image;
         this.isMe = data.isMe;
 
+        // ★追加: サーバーから受け取ったデータをセット
+        this.isFollowing = data.isFollowing;
+        this.followingCount = data.followingCount;
+        this.followersCount = data.followersCount;
+
         // その人の投稿を取得
         await this.getUserPosts(data.username);
       } else {
         alert('プロフィールの取得に失敗しました');
+      }
+    },
+    // ★追加: フォロー切り替え処理
+    async toggleFollow() {
+      const token = localStorage.jwt;
+      // APIへPOSTリクエスト
+      const res = await fetch(`/api/follow/${this.username}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // 状態を更新
+        this.isFollowing = data.isFollowing;
+
+        // カウントの見た目を即座に更新（リロードしなくてもいいように）
+        if (this.isFollowing) {
+          this.followersCount++;
+        } else {
+          this.followersCount--;
+        }
+      } else {
+        alert('エラーが発生しました');
       }
     },
 
@@ -317,6 +376,7 @@ function ProfileApp() {
       const res = await fetch(`/api/posts?user=${targetUserId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       if (res.ok) {
         const data = await res.json();
         this.posts = data.messages;

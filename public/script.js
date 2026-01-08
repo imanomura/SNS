@@ -123,10 +123,44 @@ function HomeApp() {
     isOpen: false,
     posts: [],
     activeMenuId: null,
+
+    // ★追加: 検索用の変数
+    searchKeyword: '', // 入力欄の文字
+    filterWord: '', // 検索ボタンを押した確定後の文字
+
     async mounted() {
       await this.getProfile();
       await this.getPosts();
     },
+
+    // ★ユーザープロフィールへ移動
+    goToUser(userId) {
+      window.location.href = `profile.html?user=${userId}`;
+    },
+
+    // ★追加: 検索ボタンを押したときの処理
+    doSearch() {
+      this.filterWord = this.searchKeyword; // 入力内容をフィルターに適用
+    },
+
+    // ★追加: 絞り込まれた投稿リスト（これを画面に表示する）
+    get filteredPosts() {
+      // 検索ワードが空なら、全ての投稿を返す
+      if (!this.filterWord) {
+        return this.posts;
+      }
+
+      // 検索ワードを小文字に変換（大文字・小文字を区別しないため）
+      const lowerKey = this.filterWord.toLowerCase();
+
+      // ユーザー名(userId) または 本文(content) にキーワードが含まれるものを探す
+      return this.posts.filter((post) => {
+        const inUser = post.userId && post.userId.toLowerCase().includes(lowerKey);
+        const inContent = post.content && post.content.toLowerCase().includes(lowerKey);
+        return inUser || inContent;
+      });
+    },
+
     //プロフィールの取得
     async getProfile() {
       // localStorageからトークンを取得
@@ -147,8 +181,8 @@ function HomeApp() {
       });
       if (res.ok) {
         const data = await res.json();
-        this.result = 'ユーザー：' + data.username;
-        this.username = data.username;
+        this.username = data.displayName; // 表示名を使う
+        this.result = 'ユーザー：' + data.displayName;
       } else {
         this.result = 'トークンが異なります';
       }
@@ -220,6 +254,127 @@ function HomeApp() {
   };
 }
 
+/* --- ★プロフィール機能 --- */
+function ProfileApp() {
+  return {
+    displayName: '', // 表示名
+    username: '', // 内部ID
+    bio: '',
+    image: null,
+    isMe: false, // 自分のページかどうか
+    posts: [], // その人の投稿
+
+    // 編集用データ
+    isEditing: false,
+    editName: '',
+    editBio: '',
+    editFile: null,
+    previewImage: null,
+
+    async mounted() {
+      await this.loadProfileData();
+    },
+
+    async loadProfileData() {
+      const token = localStorage.jwt;
+      if (!token) {
+        window.location.href = 'New_member.html';
+        return;
+      }
+
+      // URLから ?user=xxx を取得
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetUser = urlParams.get('user');
+
+      // APIリクエスト（userパラメータがあれば付与）
+      let url = '/api/user_info';
+      if (targetUser) {
+        url += `?user=${targetUser}`;
+      }
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.displayName = data.displayName;
+        this.username = data.username;
+        this.bio = data.bio;
+        this.image = data.image;
+        this.isMe = data.isMe;
+
+        // その人の投稿を取得
+        await this.getUserPosts(data.username);
+      } else {
+        alert('プロフィールの取得に失敗しました');
+      }
+    },
+
+    async getUserPosts(targetUserId) {
+      const token = localStorage.jwt;
+      // 特定のユーザーの投稿だけ取得するAPI呼び出し
+      const res = await fetch(`/api/posts?user=${targetUserId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.posts = data.messages;
+      }
+    },
+
+    /* --- 編集機能 --- */
+    startEdit() {
+      this.isEditing = true;
+      this.editName = this.displayName;
+      this.editBio = this.bio;
+      this.previewImage = this.image; // 初期値は今の画像
+      this.editFile = null;
+    },
+
+    cancelEdit() {
+      this.isEditing = false;
+    },
+
+    onFileChange(e) {
+      const file = e.target.files[0];
+      if (file) {
+        this.editFile = file;
+        this.previewImage = URL.createObjectURL(file);
+      }
+    },
+
+    async saveProfile() {
+      const token = localStorage.jwt;
+      const formData = new FormData();
+      formData.append('displayName', this.editName);
+      formData.append('bio', this.editBio);
+      if (this.editFile) {
+        formData.append('image', this.editFile);
+      }
+
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      if (res.ok) {
+        alert('プロフィールを更新しました');
+        this.isEditing = false;
+        // 画面をリロードして反映
+        location.reload();
+      } else {
+        alert('更新に失敗しました');
+      }
+    },
+
+    gohome() {
+      window.location.href = 'home.html';
+    }
+  };
+}
+
 //投稿
 function PostApp() {
   return {
@@ -255,44 +410,6 @@ function PostApp() {
         window.alert('投稿に失敗しました。');
         return;
       }
-      window.location.href = 'home.html';
-    }
-  };
-}
-
-//プロフィール
-function ProfileApp() {
-  return {
-    bio: '',
-    result: '',
-    isOpen: false,
-    async mounted() {
-      await this.getProfile();
-    },
-    //プロフィールの取得
-    async getProfile() {
-      // localStorageからトークンを取得
-      const token = localStorage.jwt;
-
-      if (!token) {
-        this.result = 'ログインしてください';
-        return;
-      }
-      // GETリクエスト
-      const res = await fetch('/api/profile', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        this.result = 'ユーザー：' + data.username;
-      } else {
-        this.result = 'トークンが異なります';
-      }
-    },
-    async gohome() {
       window.location.href = 'home.html';
     }
   };

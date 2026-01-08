@@ -10,14 +10,44 @@
   <body>
     <div v-scope="HomeApp()" @vue:mounted="mounted">
       <p>タイムライン</p>
+
+      <!--検索機能-->
+      <p>タイムライン</p>
+
+      <div style="margin-bottom: 20px; display: flex; gap: 5px">
+        <input
+          type="text"
+          v-model="searchKeyword"
+          placeholder="ユーザー名や本文で検索"
+          style="flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px"
+        />
+        <button
+          @click="doSearch"
+          style="
+            padding: 0 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+          "
+        >
+          検索
+        </button>
+      </div>
+      <!--投稿ボタン-->
+      <button @click.prevent="gopost">投稿</button>
       <p>ようこそ{{username}}</p>
       <p>ようこそ{{result}}</p>
 
       <div class="timeline">
+        <div v-if="filteredPosts.length === 0">
+          {{ filterWord ? '検索結果が見つかりません' : 'まだ投稿はありません' }}
+        </div>
         <div v-if="posts.length === 0">まだ投稿はありません</div>
 
         <div
-          v-for="post in posts"
+          v-for="post in filteredPosts"
           :key="post.id"
           class="post-card"
           style="
@@ -29,14 +59,13 @@
             position: relative;
           "
         >
-          <div style="flex-shrink: 0">
+          <div style="flex-shrink: 0; cursor: pointer" @click="goToUser(post.userId)">
             <img
               v-if="post.userImage"
               :src="post.userImage"
               style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background-color: #ccc"
               alt="icon"
             />
-
             <div
               v-else
               style="
@@ -50,11 +79,19 @@
                 font-weight: bold;
               "
             >
-              {{ post.userId ? post.userId.charAt(0) : '?' }}
+              {{ post.displayName ? post.displayName.charAt(0) : '?' }}
             </div>
           </div>
+
           <div style="flex-grow: 1">
-            <div style="font-weight: bold; font-size: 0.95em">{{ post.userId }}</div>
+            <div
+              style="font-weight: bold; font-size: 0.95em; cursor: pointer; display: inline-block"
+              @click="goToUser(post.userId)"
+            >
+              {{ post.displayName }}
+              <span style="font-size: 0.8em; color: #888; font-weight: normal">@{{ post.userId }}</span>
+            </div>
+
             <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em">{{ post.content }}</p>
             <small class="post-date" style="color: gray"> {{ new Date(post.createdAt).toLocaleString() }} </small>
           </div>
@@ -105,8 +142,6 @@
 
       <!--時間あればスタイルCSS移動させる-->
 
-      <!--投稿ボタン-->
-      <button @click.prevent="gopost">投稿</button>
       <!--ハンバーガーメニュー-->
       <div class="hamburger" id="hamburger" @click="isOpen = !isOpen" :class="{ active: isOpen }">
         <span></span>

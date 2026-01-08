@@ -93,6 +93,7 @@ app.post('/api/new_member', async (c) => {
   const userData = {
     id: id,
     username: username,
+    displayName: username,
     hashedPassword: hashedPassword,
     email: form_Data['email'],
     HB: form_Data['HB'],
@@ -173,16 +174,71 @@ app.post('/api/login', async (c) => {
 app.use('/api/*', jwt({ secret: JWT_SECRET }));
 
 /*** プロフィール ***/
-app.get('/api/profile', async (c) => {
-  /* ここまで到達できた時点でログインできている */
-  // ...
-  // ミドルウェアで記録されたキー「jwtPayload」の値を取得
+// app.get('/api/profile', async (c) => {
+//   /* ここまで到達できた時点でログインできている */
+//   // ...
+//   // ミドルウェアで記録されたキー「jwtPayload」の値を取得
+//   const payload = c.get('jwtPayload');
+
+//   // JWTの本体からユーザー名を取得
+//   const username = payload.sub;
+
+//   return c.json({ username });
+// });
+app.get('/api/user_info', async (c) => {
+  // URLクエリ ?user=xxx があればその人を、なければ自分を返す
+  const queryUser = c.req.query('user');
   const payload = c.get('jwtPayload');
+  const targetUsername = queryUser || payload.sub;
 
-  // JWTの本体からユーザー名を取得
-  const username = payload.sub;
+  const userEntry = await kv.get(['users', targetUsername]);
+  const user = userEntry.value;
 
-  return c.json({ username });
+  if (!user) return c.json({ message: 'ユーザーが見つかりません' }, 404);
+
+  return c.json({
+    username: user.username,
+    displayName: user.displayName || user.username, // 表示名
+    image: user.image ? `/uploads/${user.image}` : null,
+    bio: user.bio || '自己紹介はまだありません', // 自己紹介
+    isMe: payload.sub === user.username // 自分かどうかフラグ
+  });
+});
+
+/* --- ★追加: プロフィール更新 --- */
+app.post('/api/profile/update', async (c) => {
+  const payload = c.get('jwtPayload');
+  const currentUsername = payload.sub;
+
+  const formData = await c.req.parseBody();
+  const newDisplayName = formData['displayName'];
+  const newBio = formData['bio'];
+  const imageFile = formData['image'];
+
+  // データベースから現在の情報を取得
+  const key = ['users', currentUsername];
+  const userEntry = await kv.get(key);
+  const userData = userEntry.value;
+
+  if (!userData) return c.json({ message: 'ユーザー不在' }, 404);
+
+  // 情報を更新
+  if (newDisplayName) userData.displayName = newDisplayName;
+  if (newBio) userData.bio = newBio;
+
+  // 画像がアップロードされていれば保存して更新
+  if (imageFile instanceof File && imageFile.size > 0) {
+    const fileName = `${Date.now()}_${imageFile.name}`;
+    await ensureDir('./public/uploads');
+    const arrayBuffer = await imageFile.arrayBuffer();
+    await Deno.writeFile(`./public/uploads/${fileName}`, new Uint8Array(arrayBuffer));
+    userData.image = fileName; // ファイル名更新
+  }
+
+  // データベース保存
+  await kv.set(key, userData);
+
+  return c.json({ message: 'プロフィールを更新しました' });
 });
 
 app.post('/api/post_message', async (c) => {
@@ -220,16 +276,23 @@ app.post('/api/post_message', async (c) => {
 });
 
 app.get('/api/posts', async (c) => {
+  const targetUser = c.req.query('user');
   const items = kv.list({ prefix: ['messages'] });
   const messages = [];
   for await (const item of items) {
     const post = item.value;
+    // ユーザー絞り込みがある場合、一致しなければスキップ
+    if (targetUser && post.userId !== targetUser) continue;
+
+    // 投稿者の最新プロフィール情報を取得して結合
+    // ★ここがポイント：投稿時の名前ではなく、今のDBの名前を使う
     const userEntry = await kv.get(['users', post.userId]);
     const userData = userEntry.value;
 
     const PostData = {
       id: post.id,
       userId: post.userId,
+      displayName: userData ? userData.displayName || userData.username : post.userId,
       content: post.content,
       createdAt: post.createdAt,
       userImage: userData && userData.image ? `/uploads/${userData.image}` : null

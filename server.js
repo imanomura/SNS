@@ -18,8 +18,6 @@ const kv = await Deno.openKv('./my_database');
 
 //秘密鍵
 // サーバーの秘密鍵
-// 修正前
-// const JWT_SECRET = Deno.env.get('JWT_SECRET');
 
 // 修正後（文字は何でもいいですが、忘れないように）
 const JWT_SECRET = Deno.env.get('JWT_SECRET') || 'himitsu-no-key';
@@ -46,10 +44,6 @@ async function getNextId() {
   // Number型としてreturnする
   return Number(counter.value);
 }
-
-//getリクエストに対する処理
-app.get('/api/login', async (c) => {});
-//まだ書いていない
 
 //postリクエストに対する処理
 app.post('/api/new_member', async (c) => {
@@ -166,10 +160,7 @@ app.post('/api/post_message', async (c) => {
     return c.json({ message: 'メッセージが空です' }, 400);
   }
 
-  // ★ここでトークンからユーザー情報を取得する必要があります
-  // ※以下は「users」テーブルからトークンで検索する仮のコードです
-  // ※JWTを使っている場合は jwt.verify(token, secret) を使ってください
-  // const userEntry = await kv.get(['users_by_token', token]);
+  // ★ここでトークンからユーザー情報を取得
   const payload = c.get('jwtPayload');
   const userId = payload.sub;
 

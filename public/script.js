@@ -24,7 +24,6 @@ function Registraapp() {
 
     //登録
     async submitData() {
-      // const file = document.querySelector('input').files[0];
       if (!this.file) {
         alert('画像ファイルを選択してください');
         return;
@@ -225,11 +224,6 @@ function PostApp() {
         return;
       }
       window.location.href = 'home.html';
-
-      // レスポンスの処理
-      // const obj = await res.json();
-      // this.data = JSON.parse(obj.data); // オブジェクト化
-      // console.log(JSON.stringify(data, null, 2));
     }
   };
 }
@@ -247,9 +241,7 @@ function ProfileApp() {
     async getProfile() {
       // localStorageからトークンを取得
       const token = localStorage.jwt;
-      // if (token) {
-      //   window.location.href = 'profile.html';
-      // }
+
       if (!token) {
         this.result = 'ログインしてください';
         return;

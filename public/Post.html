@@ -10,9 +10,10 @@
   <body>
     <div v-scope="PostApp()" @vue:mounted="mounted">
       <p>投稿画面</p>
+      <button @click.prevent="gohome">投稿をやめる</button>
+      <button @click.prevent="post">投稿</button>
       <div id="Post">
         <textarea v-model="postContent"></textarea>
-        <button @click.prevent="post">投稿</button>
       </div>
     </div>
   </body>

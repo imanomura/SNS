@@ -1,7 +1,7 @@
 import { Hono } from 'jsr:@hono/hono';
 import { serveStatic } from 'jsr:@hono/hono/deno';
 // 認証トークン（JWT）
-import { jwt, sign } from 'jsr:@hono/hono/jwt';
+import { sign, verify as verifyJwt, jwt } from 'jsr:@hono/hono/jwt';
 
 // パスワードのハッシュ化（bcrypt）
 import { hash, verify } from 'jsr:@felix/bcrypt';
@@ -154,6 +154,56 @@ app.get('/api/profile', async (c) => {
   const username = payload.sub;
 
   return c.json({ username });
+});
+
+app.post('/api/post_message', async (c) => {
+  const body = await c.req.json();
+  const content = body.content;
+  // const id = await getNextId();
+  // content.id = id;
+
+  if (!content) {
+    return c.json({ message: 'メッセージが空です' }, 400);
+  }
+
+  // ★ここでトークンからユーザー情報を取得する必要があります
+  // ※以下は「users」テーブルからトークンで検索する仮のコードです
+  // ※JWTを使っている場合は jwt.verify(token, secret) を使ってください
+  // const userEntry = await kv.get(['users_by_token', token]);
+  const payload = c.get('jwtPayload');
+  const userId = payload.sub;
+
+  // 3. 投稿IDの生成 (UUIDを使うのが一番確実です)
+  const postId = crypto.randomUUID();
+
+  // 4. 保存するデータを作成
+  const message = {
+    id: postId,
+    userId: userId,
+    content: content,
+    createdAt: new Date().toISOString()
+  };
+
+  // 5. KVに保存 (キーは ['messages', postId] とする)
+  await kv.set(['messages', message.id], message);
+
+  c.status(201);
+  c.header('Location', '/api/messages/' + message.id);
+
+  return c.json({ message: 'メッセージを保存しました', id: message.id });
+});
+
+app.get('/api/posts', async (c) => {
+  const items = kv.list({ prefix: ['messages'] });
+  const messages = [];
+  for await (const item of items) {
+    messages.push(item.value);
+  }
+
+  messages.sort((a, b) => {
+    return new Date(b.createdAt) - new Date(a.createdAt);
+  });
+  return c.json({ messages });
 });
 
 Deno.serve(app.fetch);

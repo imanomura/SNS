@@ -118,13 +118,18 @@ function HomeApp() {
     username: '',
     result: '',
     isOpen: false,
+    posts: [],
     async mounted() {
       await this.getProfile();
+      await this.getPosts();
     },
     //プロフィールの取得
     async getProfile() {
       // localStorageからトークンを取得
       const token = localStorage.jwt;
+      // if (token) {
+      //   window.location.href = 'profile.html';
+      // }
       if (!token) {
         this.result = 'ログインしてください';
         return;
@@ -144,6 +149,28 @@ function HomeApp() {
         this.result = 'トークンが異なります';
       }
     },
+
+    //投稿一覧の取得
+    async getPosts() {
+      const token = localStorage.jwt;
+      const res = await fetch('/api/posts', {
+        method: 'GET',
+        // 2. ヘッダーにトークンを追加
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.posts = data.messages;
+      } else {
+        this.result = '投稿の取得に失敗しました';
+      }
+    },
+
+    goProfile() {
+      window.location.href = 'profile.html';
+    },
     /* ログアウト */
     async logout() {
       if (localStorage.jwt) {
@@ -162,9 +189,87 @@ function HomeApp() {
   };
 }
 
+//投稿
 function PostApp() {
   return {
     postContent: '',
-    async mounted() {}
+    async mounted() {},
+    async gohome() {
+      window.location.href = 'home.html';
+    },
+    async post() {
+      if (!this.postContent) {
+        window.alert('投稿内容を入力してください');
+        return;
+      }
+      // localStorageからトークンを取得
+      const token = localStorage.jwt;
+      if (!token) {
+        this.result = 'ログインしてください';
+        window.location.href = 'New_member.html';
+        return;
+      }
+      // POSTリクエスト
+      const res = await fetch('/api/post_message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: this.postContent
+        })
+      });
+      if (!res.ok) {
+        window.alert('投稿に失敗しました。');
+        return;
+      }
+      window.location.href = 'home.html';
+
+      // レスポンスの処理
+      // const obj = await res.json();
+      // this.data = JSON.parse(obj.data); // オブジェクト化
+      // console.log(JSON.stringify(data, null, 2));
+    }
+  };
+}
+
+//プロフィール
+function ProfileApp() {
+  return {
+    bio: '',
+    result: '',
+    isOpen: false,
+    async mounted() {
+      await this.getProfile();
+    },
+    //プロフィールの取得
+    async getProfile() {
+      // localStorageからトークンを取得
+      const token = localStorage.jwt;
+      // if (token) {
+      //   window.location.href = 'profile.html';
+      // }
+      if (!token) {
+        this.result = 'ログインしてください';
+        return;
+      }
+      // GETリクエスト
+      const res = await fetch('/api/profile', {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.result = 'ユーザー：' + data.username;
+      } else {
+        this.result = 'トークンが異なります';
+      }
+    },
+    async gohome() {
+      window.location.href = 'home.html';
+    }
   };
 }

@@ -7,6 +7,13 @@
     <link href="style.css" rel="stylesheet" />
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
-  <body></body>
+  <body>
+    <div v-scope="ProfileApp()" @vue:mounted="mounted">
+      <h1>{{result}}</h1>
+      <p>自己紹介</p>
+      <p>{{bio}}</p>
+      <button @click.prevent="gohome">ホームに戻る</button>
+    </div>
+  </body>
   <script src="script.js"></script>
 </html>

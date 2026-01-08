@@ -10,8 +10,17 @@
   <body>
     <div v-scope="HomeApp()" @vue:mounted="mounted">
       <p>タイムライン</p>
-      <!-- <p>ようこそ{{username}}</p> -->
+      <p>ようこそ{{username}}</p>
       <p>ようこそ{{result}}</p>
+
+      <div class="timeline">
+        <div v-if="posts.length === 0">まだ投稿はありません</div>
+
+        <div v-for="post in posts" :key="post.id" class="post-card">
+          <p class="post-content">{{ post.content }}</p>
+          <small class="post-date">{{ new Date(post.createdAt).toLocaleString() }}</small>
+        </div>
+      </div>
 
       <!--投稿ボタン-->
       <button @click.prevent="gopost">投稿</button>
@@ -25,7 +34,7 @@
       <nav class="menu" id="menu" :class="{ open: isOpen }">
         <ul>
           <li>
-            <button @click.prevent="getProfile">プロフィール確認</button>
+            <button @click.prevent="goProfile">プロフィール確認</button>
           </li>
           <li>ブックマーク</li>
           <li>設定</li>

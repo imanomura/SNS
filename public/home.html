@@ -109,13 +109,109 @@
             >
               {{ post.displayName }}
             </div>
-            <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">{{ post.content }}</p>
+            <div style="flex-grow: 1">
+              <!-- <div
+                style="font-weight: bold; font-size: 0.95em; cursor: pointer; display: inline-block"
+                @click="goToUser(post.userId)"
+              >
+                {{ post.displayName }}
+              </div> -->
+
+              <div
+                v-if="post.parent"
+                style="
+                  background-color: #f5f5f5;
+                  border-left: 3px solid #ccc;
+                  padding: 8px;
+                  margin: 5px 0 10px 0;
+                  border-radius: 4px;
+                  font-size: 0.9em;
+                  color: #666;
+                "
+              >
+                <span style="font-weight: bold">To: {{ post.parent.displayName }}</span>
+                <p style="margin: 2px 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                  {{ post.parent.content }}
+                </p>
+              </div>
+              <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">
+                {{ post.content }}
+              </p>
+            </div>
             <button
               @click.stop="goReply(post.id)"
               style="background: none; border: none; cursor: pointer; margin-right: 15px; color: #555"
             >
               ↩返信
             </button>
+            <button
+              @click.stop="openThread(post.id)"
+              style="background: none; border: none; cursor: pointer; color: #007bff"
+            >
+              💬 返信一覧
+            </button>
+            <div v-if="isThreadOpen" class="modal-overlay" @click="closeThread">
+              <div class="modal-content" @click.stop>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 10px;
+                  "
+                >
+                  <h3 style="margin: 0">スレッド</h3>
+                  <button
+                    @click="closeThread"
+                    style="border: none; background: none; font-size: 1.2em; cursor: pointer"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div v-if="!threadData" style="text-align: center; padding: 20px">読み込み中...</div>
+
+                <div v-else class="thread-container">
+                  <div v-if="threadData.parent" class="thread-item parent" @click="goToUser(threadData.parent.userId)">
+                    <small style="color: #888">返信先:</small>
+                    <div style="font-weight: bold">{{ threadData.parent.displayName }}</div>
+                    <div>{{ threadData.parent.content }}</div>
+                    <div style="text-align: center; color: #ccc; font-size: 1.5em; line-height: 0.5">⬇</div>
+                  </div>
+
+                  <div class="thread-item target">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px">
+                      <img
+                        :src="threadData.target.userImage || ''"
+                        style="width: 30px; height: 30px; border-radius: 50%; background: #ccc"
+                      />
+                      <strong>{{ threadData.target.displayName }}</strong>
+                    </div>
+                    <div style="font-size: 1.1em">{{ threadData.target.content }}</div>
+                    <small style="color: gray">{{ new Date(threadData.target.createdAt).toLocaleString() }}</small>
+                  </div>
+
+                  <div
+                    v-if="threadData.replies.length > 0"
+                    style="text-align: center; color: #ccc; font-size: 1.5em; line-height: 0.5; margin: 5px 0"
+                  >
+                    ⬇
+                  </div>
+                  <div v-else style="text-align: center; color: #888; font-size: 0.8em; margin-top: 10px">
+                    返信はまだありません
+                  </div>
+
+                  <div v-for="reply in threadData.replies" :key="reply.id" class="thread-item reply">
+                    <div style="display: flex; justify-content: space-between">
+                      <strong>{{ reply.displayName }}</strong>
+                      <small>{{ new Date(reply.createdAt).toLocaleString() }}</small>
+                    </div>
+                    <div>{{ reply.content }}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <small class="post-date" style="color: gray"> {{ new Date(post.createdAt).toLocaleString() }} </small>
           </div>
 

@@ -130,6 +130,34 @@ function HomeApp() {
 
     // ★追加: 現在のタブ ('all' または 'following')
     currentTab: 'all',
+
+    // ★ここから追加
+    isThreadOpen: false, // モーダルが開いているか
+    threadData: null, // スレッドのデータ
+    // スレッドを開く
+    async openThread(postId) {
+      this.isThreadOpen = true;
+      this.threadData = null; // ロード中は空にする
+
+      const token = localStorage.jwt;
+      const res = await fetch(`/api/thread/${postId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        this.threadData = await res.json();
+      } else {
+        alert('スレッドの取得に失敗しました');
+        this.isThreadOpen = false;
+      }
+    },
+
+    // スレッドを閉じる
+    closeThread() {
+      this.isThreadOpen = false;
+      this.threadData = null;
+    },
+
     // ★追加: 画面上部のタイトルを動的に変える
     getTitle() {
       if (this.currentTab === 'private') return '🔒 じぶんだけ';
@@ -517,49 +545,6 @@ function PostApp() {
 
     async gohome() {
       window.location.href = 'home.html';
-    },
-    async post() {
-      if (!this.postContent) {
-        window.alert('投稿内容を入力してください');
-        return;
-      }
-      // localStorageからトークンを取得
-      const token = localStorage.jwt;
-      if (!token) {
-        this.result = 'ログインしてください';
-        window.location.href = 'New_member.html';
-        return;
-      }
-
-      // ★追加: 公開設定を決める
-      const visibility = this.isPrivate ? 'private' : 'public';
-
-      // POSTリクエスト
-      const res = await fetch('/api/post_message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          content: this.postContent,
-          visibility: visibility // ★追加: サーバーへ送る
-        })
-      });
-      if (!res.ok) {
-        window.alert('投稿に失敗しました。');
-        return;
-      }
-      // window.location.href = 'home.html';
-      // 投稿後はホームに戻る
-      // もし自分だけモードで投稿したら、戻ったときも自分だけモードだと親切（オプション）
-      // ...（前略）
-      if (this.isPrivate) {
-        // ★修正: じぶんだけタブを指定して戻る
-        window.location.href = 'home.html?tab=private';
-      } else {
-        window.location.href = 'home.html';
-      }
     }
   };
 }

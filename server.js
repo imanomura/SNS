@@ -309,6 +309,28 @@ app.get('/api/posts', async (c) => {
       }
     }
 
+    // ★追加: 返信元（親投稿）の情報を取得する処理
+    let parentInfo = null;
+    if (post.parentId) {
+      // 親投稿のデータを取得
+      const parentEntry = await kv.get(['messages', post.parentId]);
+      const parentMsg = parentEntry.value;
+
+      if (parentMsg) {
+        // 親投稿のユーザー情報を取得
+        const parentUserEntry = await kv.get(['users', parentMsg.userId]);
+        const parentUser = parentUserEntry.value;
+
+        parentInfo = {
+          displayName: parentUser ? parentUser.displayName || parentUser.username : '不明なユーザー',
+          content: parentMsg.content
+        };
+      } else {
+        // 親投稿が削除されていた場合
+        parentInfo = { displayName: '削除された投稿', content: 'この投稿は削除されました' };
+      }
+    }
+
     // --- ユーザー情報の結合 ---
     const userEntry = await kv.get(['users', post.userId]);
     const userData = userEntry.value;
@@ -320,7 +342,8 @@ app.get('/api/posts', async (c) => {
       content: post.content,
       createdAt: post.createdAt,
       userImage: userData && userData.image ? `/uploads/${userData.image}` : null,
-      visibility: post.visibility // フロントでアイコン表示などに使うかも
+      visibility: post.visibility, // フロントでアイコン表示などに使うかも
+      parent: parentInfo // ★追加: これをフロントエンドに送る
     };
     messages.push(PostData);
   }
@@ -403,6 +426,69 @@ app.get('/api/messages/:id', async (c) => {
     displayName: userData ? userData.displayName : post.userId,
     content: post.content,
     createdAt: post.createdAt
+  });
+});
+
+// server.ts に追加
+
+/* --- スレッド（親・自分・返信）を取得するAPI --- */
+app.get('/api/thread/:id', async (c) => {
+  const id = c.req.param('id');
+
+  // 1. 中心となる投稿（自分）を取得
+  const targetEntry = await kv.get(['messages', id]);
+  const targetPost = targetEntry.value;
+
+  if (!targetPost) {
+    return c.json({ message: '投稿が見つかりません' }, 404);
+  }
+
+  // ユーザー情報を付与するヘルパー関数
+  const enrichPost = async (post) => {
+    if (!post) return null;
+    const userEntry = await kv.get(['users', post.userId]);
+    const userData = userEntry.value;
+    return {
+      ...post,
+      displayName: userData ? userData.displayName || userData.username : post.userId,
+      userImage: userData && userData.image ? `/uploads/${userData.image}` : null
+    };
+  };
+
+  // 2. 「親」を取得（もしあれば）
+  let parentPost = null;
+  if (targetPost.parentId) {
+    const parentEntry = await kv.get(['messages', targetPost.parentId]);
+    if (parentEntry.value) {
+      parentPost = await enrichPost(parentEntry.value);
+    } else {
+      // 親が削除されている場合
+      parentPost = { content: '削除された投稿', displayName: '不明' };
+    }
+  }
+
+  // 3. 「子（返信）」を検索
+  // (注意: 本格的なアプリではインデックスを作るべきですが、今回は全件スキャンで簡易実装します)
+  const replies = [];
+  const iter = kv.list({ prefix: ['messages'] });
+  for await (const item of iter) {
+    const msg = item.value;
+    // parentId が 今回の投稿ID と一致するものを探す
+    if (msg.parentId === id) {
+      const enriched = await enrichPost(msg);
+      replies.push(enriched);
+    }
+  }
+  // 古い順に並べる
+  replies.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  // 自分の情報もリッチにする
+  const enrichedTarget = await enrichPost(targetPost);
+
+  return c.json({
+    parent: parentPost,
+    target: enrichedTarget,
+    replies: replies
   });
 });
 

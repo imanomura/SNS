@@ -10,10 +10,24 @@
   <body>
     <div v-scope="PostApp()" @vue:mounted="mounted">
       <p>投稿画面</p>
+      <div style="margin: 10px 0">
+        <label style="display: flex; align-items: center; cursor: pointer">
+          <input type="checkbox" v-model="isPrivate" style="margin-right: 5px; transform: scale(1.2)" />
+          🔒 じぶんだけ（非公開）にする
+        </label>
+      </div>
       <button @click.prevent="gohome">投稿をやめる</button>
       <button @click.prevent="post">投稿</button>
+      <div
+        v-if="parentPost"
+        style="background: #f0f0f0; padding: 10px; border-radius: 5px; margin-bottom: 10px; border-left: 4px solid #888"
+      >
+        <small>返信先: <b>{{ parentPost.displayName }}</b></small>
+        <p style="color: #555; font-size: 0.9em; margin: 5px 0">{{ parentPost.content }}</p>
+      </div>
+
       <div id="Post">
-        <textarea v-model="postContent"></textarea>
+        <textarea v-model="postContent" placeholder="いまどうしてる？"></textarea>
       </div>
     </div>
   </body>

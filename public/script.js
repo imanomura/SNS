@@ -130,9 +130,31 @@ function HomeApp() {
 
     // ★追加: 現在のタブ ('all' または 'following')
     currentTab: 'all',
+    // ★追加: 画面上部のタイトルを動的に変える
+    getTitle() {
+      if (this.currentTab === 'private') return '🔒 じぶんだけ';
+      if (this.currentTab === 'following') return 'フォロー中';
+      return 'タイムライン';
+    },
+
+    //返信
+    // ★追加: 返信画面へ移動
+    goReply(postId) {
+      // 現在のタブ情報を維持しつつ、replyToパラメータをつけて移動
+      const current = this.currentTab === 'private' ? 'private' : '';
+      window.location.href = `Post.html?replyTo=${postId}&mode=${current}`;
+    },
 
     async mounted() {
       await this.getProfile();
+      // ★追加: URLの ?tab=... を見て、開くタブを決める
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'private') {
+        this.currentTab = 'private';
+      } else if (tabParam === 'following') {
+        this.currentTab = 'following';
+      }
       await this.getPosts();
     },
 
@@ -241,24 +263,6 @@ function HomeApp() {
       }
     },
 
-    //投稿一覧の取得
-    async getPosts() {
-      const token = localStorage.jwt;
-      const res = await fetch('/api/posts', {
-        method: 'GET',
-        // 2. ヘッダーにトークンを追加
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        this.posts = data.messages;
-      } else {
-        this.result = '投稿の取得に失敗しました';
-      }
-    },
-
     goProfile() {
       window.location.href = 'profile.html';
     },
@@ -275,7 +279,12 @@ function HomeApp() {
     },
     //投稿
     async gopost() {
-      window.location.href = 'Post.html';
+      if (this.currentTab === 'private') {
+        window.location.href = 'Post.html?mode=private';
+      } else {
+        window.location.href = 'Post.html';
+      }
+      // window.location.href = 'Post.html';
     }
   };
 }
@@ -439,7 +448,73 @@ function ProfileApp() {
 function PostApp() {
   return {
     postContent: '',
-    async mounted() {},
+    isPrivate: false, // ★追加: チェックボックスの状態
+    parentPost: null, // ★追加: 返信元の投稿データ
+    replyToId: null, // ★追加: 返信元のID
+
+    async mounted() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') === 'private') {
+        this.isPrivate = true;
+      }
+      // ★追加: 返信モードかどうかの判定
+      const replyTo = params.get('replyTo');
+      if (replyTo) {
+        this.replyToId = replyTo;
+        await this.loadParentPost(replyTo);
+      }
+    },
+
+    // ★追加: 返信元の投稿情報をサーバーから取得
+    async loadParentPost(id) {
+      const token = localStorage.jwt;
+      const res = await fetch(`/api/messages/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        this.parentPost = await res.json();
+      }
+    },
+
+    async post() {
+      if (!this.postContent) {
+        window.alert('投稿内容を入力してください');
+        return;
+      }
+      const token = localStorage.jwt;
+      if (!token) {
+        window.location.href = 'New_member.html';
+        return;
+      }
+
+      const visibility = this.isPrivate ? 'private' : 'public';
+
+      const res = await fetch('/api/post_message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: this.postContent,
+          visibility: visibility,
+          parentId: this.replyToId // ★追加: 親IDを送る（なければnull）
+        })
+      });
+
+      if (!res.ok) {
+        window.alert('投稿に失敗しました。');
+        return;
+      }
+
+      // 投稿後の戻り先処理（前の回答の内容）
+      if (this.isPrivate) {
+        window.location.href = 'home.html?tab=private';
+      } else {
+        window.location.href = 'home.html';
+      }
+    },
+
     async gohome() {
       window.location.href = 'home.html';
     },
@@ -455,6 +530,10 @@ function PostApp() {
         window.location.href = 'New_member.html';
         return;
       }
+
+      // ★追加: 公開設定を決める
+      const visibility = this.isPrivate ? 'private' : 'public';
+
       // POSTリクエスト
       const res = await fetch('/api/post_message', {
         method: 'POST',
@@ -463,14 +542,24 @@ function PostApp() {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          content: this.postContent
+          content: this.postContent,
+          visibility: visibility // ★追加: サーバーへ送る
         })
       });
       if (!res.ok) {
         window.alert('投稿に失敗しました。');
         return;
       }
-      window.location.href = 'home.html';
+      // window.location.href = 'home.html';
+      // 投稿後はホームに戻る
+      // もし自分だけモードで投稿したら、戻ったときも自分だけモードだと親切（オプション）
+      // ...（前略）
+      if (this.isPrivate) {
+        // ★修正: じぶんだけタブを指定して戻る
+        window.location.href = 'home.html?tab=private';
+      } else {
+        window.location.href = 'home.html';
+      }
     }
   };
 }

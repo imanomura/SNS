@@ -216,6 +216,11 @@ app.post('/api/profile/update', async (c) => {
 app.post('/api/post_message', async (c) => {
   const body = await c.req.json();
   const content = body.content;
+  // ★追加: 公開設定を受け取る（なければ 'public'）
+  const visibility = body.visibility || 'public';
+
+  // ★追加: 親投稿のID（返信の場合のみ存在する）
+  const parentId = body.parentId || null;
 
   if (!content) {
     return c.json({ message: 'メッセージが空です' }, 400);
@@ -230,7 +235,9 @@ app.post('/api/post_message', async (c) => {
     id: postId,
     userId: userId,
     content: content,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    visibility: visibility, // ★追加: ここに保存
+    parentId: parentId // ★追加: ここに保存
   };
 
   await kv.set(['messages', message.id], message);
@@ -270,7 +277,20 @@ app.get('/api/posts', async (c) => {
   for await (const item of items) {
     const post = item.value;
 
-    // --- フィルタリング処理 ---
+    // --- ★ここからフィルタリング処理を修正 ---
+
+    // 1. 「じぶんだけ」モードの場合
+    if (type === 'private') {
+      // 自分の投稿、かつ visibility が private のものだけ許可
+      if (post.userId !== me) continue;
+      if (post.visibility !== 'private') continue;
+    }
+    // 2. それ以外のモード（おすすめ、フォロー中、プロフィール）
+    else {
+      // visibility が private のものは、他人は絶対に見られない
+      // (自分が見る場合でも、通常のタイムラインには混ぜない仕様にします)
+      if (post.visibility === 'private') continue;
+    }
 
     // A. プロフィール画面用: 特定ユーザーの投稿のみ
     if (targetUser) {
@@ -299,7 +319,8 @@ app.get('/api/posts', async (c) => {
       displayName: userData ? userData.displayName || userData.username : post.userId,
       content: post.content,
       createdAt: post.createdAt,
-      userImage: userData && userData.image ? `/uploads/${userData.image}` : null
+      userImage: userData && userData.image ? `/uploads/${userData.image}` : null,
+      visibility: post.visibility // フロントでアイコン表示などに使うかも
     };
     messages.push(PostData);
   }
@@ -358,6 +379,31 @@ app.post('/api/follow/:targetUser', async (c) => {
     await atom.commit();
     return c.json({ isFollowing: true, message: 'フォローしました' });
   }
+});
+
+/* --- server.ts に追加: 投稿を1つだけ取得する用 --- */
+app.get('/api/messages/:id', async (c) => {
+  const id = c.req.param('id');
+
+  // 投稿データを取得
+  const item = await kv.get(['messages', id]);
+  const post = item.value;
+
+  if (!post) {
+    return c.json({ message: '投稿が見つかりません' }, 404);
+  }
+
+  // 投稿者の情報を取得して名前を表示できるようにする
+  const userEntry = await kv.get(['users', post.userId]);
+  const userData = userEntry.value;
+
+  return c.json({
+    id: post.id,
+    userId: post.userId,
+    displayName: userData ? userData.displayName : post.userId,
+    content: post.content,
+    createdAt: post.createdAt
+  });
 });
 
 Deno.serve(app.fetch);

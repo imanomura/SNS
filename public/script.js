@@ -64,25 +64,38 @@ function Registraapp() {
       this.file = null;
     }, //登録
 
-    //ログイン
+    // ログイン処理の修正案
     async login_getData() {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: this.username, password: this.password })
-      });
-      this.data = await res.json();
-      this.result = this.data.message;
-      console.log(this.data.message);
-      if (res.ok) {
-        localStorage.jwt = this.data.token; // localStorageに保存
-        window.location.href = 'home.html'; //ホーム画面へ移動
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: this.username, password: this.password })
+        });
+
+        const obj = await res.json();
+        this.data = obj;
+        this.result = obj.message;
+
+        if (res.ok && obj.token) {
+          // 保存方法を setItem に統一
+          localStorage.setItem('jwt', obj.token);
+          window.location.href = 'home.html';
+        } else {
+          // 401などのエラー時にメッセージを表示
+          alert('ログイン失敗: ' + (obj.message || '認証に失敗しました'));
+        }
+      } catch (e) {
+        console.error('Login Error:', e);
+        alert('サーバーとの通信に失敗しました');
       }
     },
     //プロフィールの取得
     async getProfile() {
       // localStorageからトークンを取得
-      const token = localStorage.jwt;
+      // 修正前: const token = localStorage.jwt;
+      // 修正後:
+      const token = localStorage.getItem('jwt');
       if (!token) {
         this.result = 'ログインしてください';
         return;

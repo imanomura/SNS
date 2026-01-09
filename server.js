@@ -17,7 +17,12 @@ app.get('/', (c) => c.redirect('/New_member.html'));
 const kv = await Deno.openKv('./my_database');
 
 // 秘密鍵
-const JWT_SECRET = Deno.env.get('JWT_SECRET') || 'himitsu-no-key';
+// 修正案
+const JWT_SECRET_STR = Deno.env.get('JWT_SECRET');
+if (!JWT_SECRET_STR) {
+  console.error('エラー: 環境変数 JWT_SECRET が設定されていません。');
+}
+const JWT_SECRET = JWT_SECRET_STR || 'himitsu-no-key';
 
 app.use('/*', serveStatic({ root: './public' }));
 

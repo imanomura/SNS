@@ -137,6 +137,7 @@ function HomeApp() {
     isOpen: false,
     posts: [],
     activeMenuId: null,
+    isDark: false, // ダークモード状態管理
 
     // ★追加: 検索用の変数
     searchKeyword: '', // 入力欄の文字
@@ -198,6 +199,21 @@ function HomeApp() {
         this.currentTab = 'following';
       }
       await this.getPosts();
+      // ページ読み込み時に、前回保存したモードがあれば適用する
+      if (localStorage.getItem('theme') === 'dark') {
+        this.isDark = true;
+        document.body.classList.add('dark-theme');
+      }
+    },
+    toggleDarkMode() {
+      this.isDark = !this.isDark;
+      if (this.isDark) {
+        document.body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark'); // 状態を保存
+      } else {
+        document.body.classList.remove('dark-theme');
+        localStorage.setItem('theme', 'light');
+      }
     },
 
     // ★追加: タブ切り替え機能

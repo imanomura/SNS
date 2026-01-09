@@ -341,3 +341,41 @@ h2 {
   border-radius: 4px;
   margin-bottom: 5px;
 }
+
+/* --- ダークモード設定 --- */
+/* ダークモード時の全体背景と文字色 */
+body.dark-theme {
+  background-color: #2c1a21; /* 背景を暗い小豆色に（元のピンクと相性良） */
+  color: #f0f0f0;
+}
+
+/* ダークモード時のホームコンテナ */
+body.dark-theme .home-container {
+  background-color: #1a1a1a; /* タイムライン背景を黒に */
+  color: #f0f0f0;
+}
+
+/* ダークモード時の投稿カード */
+body.dark-theme .post-card {
+  border-bottom: 1px solid #444;
+}
+
+/* ダークモード時の入力欄やスレッド */
+body.dark-theme input,
+body.dark-theme .thread-item.target,
+body.dark-theme .modal-content {
+  background-color: #333;
+  color: white;
+  border-color: #555;
+}
+
+/* 月マークのボタン（ハンバーガーメニュー内） */
+.dark-mode-toggle {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}

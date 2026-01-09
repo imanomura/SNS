@@ -4,6 +4,145 @@ body {
   margin: 0;
   padding: 0;
 }
+/* --- 基本設定：背景色をピンクに設定 --- */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+  background-color: #e29399; /* 指定のピンク色 */
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* コンテナ */
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 20px;
+}
+
+/* --- カードのデザイン --- */
+.auth-card {
+  background: #fafafa; /* カード自体は文字が見やすいように薄いグレー */
+  padding: 40px 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* タイトル：メニューの色（#7a2d49）と合わせて統一感を出す */
+h2 {
+  margin: 0 0 10px 0;
+  font-size: 22px;
+  color: #7a2d49; /* メニューの背景色と同じ */
+  font-weight: bold;
+}
+
+.auth-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* フォーム項目 */
+.form-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #7a2d49; /* ラベルもアクセントカラーに */
+}
+
+.form-group input[type='text'],
+.form-group input[type='email'],
+.form-group input[type='password'],
+.form-group input[type='date'] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+  background-color: #fff;
+}
+
+/* 入力中（フォーカス）の枠線の色を変更 */
+.form-group input:focus {
+  outline: none;
+  border-color: #7a2d49;
+}
+
+/* 画像プレビュー */
+.image-preview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.image-preview img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: #ccc;
+  border: 2px solid #e29399; /* プレビューの縁を背景色と合わせる */
+}
+
+/* --- 登録ボタン：ここをメニューと同じ色にして「自分だけ」感を強調 --- */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #7a2d49; /* ハンバーガーメニューと同じ色 */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+/* フッター */
+.auth-footer {
+  margin-top: 25px;
+  font-size: 14px;
+  color: #666;
+}
+
+.auth-footer a {
+  color: #7a2d49; /* リンクも色を統一 */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ファイル選択の見た目 */
+.file-label {
+  display: inline-block;
+  padding: 8px 15px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #333;
+}
 
 /* --- ハンバーガーボタン --- */
 .hamburger {

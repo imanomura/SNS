@@ -3,20 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ログイン画面</title>
+    <title>ログイン | Sanctuary</title>
     <link href="style.css" rel="stylesheet" />
     <script src="https://unpkg.com/petite-vue" defer init></script>
   </head>
   <body>
-    <div v-scope="Registraapp()">
-      <p>ログイン</p>
-      <form @submit.prevent="login_getData">
-        <label>ユーザー名：<input type="text" v-model="username" /></label><br />
-        <label>パスワード：<input type="password" v-model="password" /></label><br />
-        <label><button type="submit">ログイン</button></label>
-      </form>
+    <div v-scope="Registraapp()" class="auth-container">
+      <div class="auth-card">
+        <h2>ログイン</h2>
+        <p class="auth-subtitle">おかえりなさい。自分の時間に戻りましょう</p>
 
-      <p>新機会員登録に<a href="/New_member.html">戻る</a></p>
+        <form @submit.prevent="login_getData">
+          <div class="form-group">
+            <label>ユーザー名</label>
+            <input type="text" v-model="username" placeholder="ユーザー名を入力" />
+          </div>
+
+          <div class="form-group">
+            <label>パスワード</label>
+            <input type="password" v-model="password" placeholder="パスワードを入力" />
+          </div>
+
+          <button type="submit" class="submit-btn">ログイン</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>アカウントをお持ちでない方は<a href="/New_member.html">新規会員登録</a></p>
+        </div>
+      </div>
     </div>
   </body>
   <script src="script.js"></script>

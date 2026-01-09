@@ -156,6 +156,22 @@
                     表示する
                   </button>
                 </div>
+                <div v-if="post.isBlurred && post.showContent" style="margin-top: 5px">
+                  <button
+                    @click="post.showContent = false"
+                    style="
+                      font-size: 0.8em;
+                      color: #888;
+                      background: none;
+                      border: 1px solid #ccc;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      padding: 2px 8px;
+                    "
+                  >
+                    再び隠す
+                  </button>
+                </div>
               </div>
             </div>
 

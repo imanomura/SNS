@@ -9,10 +9,10 @@
   </head>
   <body>
     <div v-scope="Registraapp()">
-    <p>Hello,World!</p>
-    <p>新機会員登録</p>
-    
-    <!-- <form v-scope="Registraapp()"> -->
+      <!-- <p>Hello,World!</p> -->
+      <p>新機会員登録</p>
+
+      <!-- <form v-scope="Registraapp()"> -->
       <form @submit.prevent="submitData">
         <label>ユーザー名：<input type="text" v-model="username" /></label><br />
         <label>メールアドレス：<input type="email" v-model="email" /></label> <br />
@@ -28,7 +28,7 @@
       </form>
 
       <p>ログインの方は<a href="/login.html">こちら</a></p>
-    
+      <!--     
       <table border="1">
           <thead>
             <tr>
@@ -48,9 +48,8 @@
           </tbody>
         </table>
         <p v-if="data.message">{{ data.message }}</p>
-      </div>
+      </div> -->
     </div>
-
   </body>
   <script src="script.js"></script>
 </html>

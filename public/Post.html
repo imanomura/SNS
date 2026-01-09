@@ -16,6 +16,24 @@
           🔒 じぶんだけ（非公開）にする
         </label>
       </div>
+      <div style="margin: 15px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; background: #fff">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: bold">
+          <input type="checkbox" v-model="isBlurred" style="width: 18px; height: 18px" />
+          内容をぼかして投稿する（閲覧注意）
+        </label>
+
+        <div v-if="isBlurred" style="margin-top: 10px">
+          <p style="font-size: 0.8em; color: #666; margin-bottom: 5px">
+            表示する注意書き（例：ネタバレ注意、愚痴など）
+          </p>
+          <input
+            type="text"
+            v-model="warningText"
+            placeholder="閲覧注意"
+            style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px"
+          />
+        </div>
+      </div>
       <button @click.prevent="gohome">投稿をやめる</button>
       <button @click.prevent="post">投稿</button>
       <div

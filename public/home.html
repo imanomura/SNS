@@ -127,9 +127,36 @@
                   {{ post.parent.content }}
                 </p>
               </div>
-              <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">
+              <!-- <p class="post-content" style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4">
                 {{ post.content }}
-              </p>
+              </p> -->
+              <div style="position: relative">
+                <p
+                  class="post-content"
+                  :class="{ 'blur-content': post.isBlurred && !post.showContent }"
+                  style="margin: 0 0 5px 0; font-size: 1.1em; line-height: 1.4"
+                >
+                  {{ post.content }}
+                </p>
+
+                <div v-if="post.isBlurred && !post.showContent" class="blur-overlay">
+                  <span style="font-weight: bold; color: #d32f2f; margin-bottom: 5px">
+                    ⚠️ {{ post.warningText || '閲覧注意' }}
+                  </span>
+                  <button
+                    @click="post.showContent = true"
+                    style="
+                      padding: 4px 12px;
+                      border-radius: 20px;
+                      border: 1px solid #333;
+                      cursor: pointer;
+                      background: white;
+                    "
+                  >
+                    表示する
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div style="display: flex; align-items: center; gap: 15px; margin-top: 5px; margin-bottom: 8px">
@@ -332,8 +359,8 @@
           <li>
             <button @click="switchTab('private'); isOpen=false">🔒 じぶんだけ</button>
           </li>
-          <li>ブックマーク</li>
-          <li>設定</li>
+          <!-- <li>ブックマーク</li> -->
+          <!-- <li>設定</li> -->
           <li>
             <button @click.prevent="logout">ログアウト</button>
           </li>

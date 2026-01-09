@@ -562,6 +562,9 @@ function PostApp() {
     isPrivate: false, // ★追加: チェックボックスの状態
     parentPost: null, // ★追加: 返信元の投稿データ
     replyToId: null, // ★追加: 返信元のID
+    // ★ここを追加：ぼかし機能の状態管理用
+    isBlurred: false,
+    warningText: '',
 
     async mounted() {
       const params = new URLSearchParams(window.location.search);
@@ -609,7 +612,10 @@ function PostApp() {
         body: JSON.stringify({
           content: this.postContent,
           visibility: visibility,
-          parentId: this.replyToId // ★追加: 親IDを送る（なければnull）
+          parentId: this.replyToId, // ★追加: 親IDを送る（なければnull）
+          // ★ ぼかし設定を送信
+          isBlurred: this.isBlurred,
+          warningText: this.warningText
         })
       });
 

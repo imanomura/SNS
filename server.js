@@ -224,6 +224,10 @@ app.post('/api/post_message', async (c) => {
   // ★追加: 公開設定を受け取る（なければ 'public'）
   const visibility = body.visibility || 'public';
 
+  // ★追加: ぼかし設定と注意文を受け取る
+  const isBlurred = body.isBlurred || false;
+  const warningText = body.warningText || '';
+
   // ★追加: 親投稿のID（返信の場合のみ存在する）
   const parentId = body.parentId || null;
 
@@ -242,7 +246,9 @@ app.post('/api/post_message', async (c) => {
     content: content,
     createdAt: new Date().toISOString(),
     visibility: visibility, // ★追加: ここに保存
-    parentId: parentId // ★追加: ここに保存
+    parentId: parentId, // ★追加: ここに保存
+    isBlurred: isBlurred, // ★保存
+    warningText: warningText // ★保存
   };
 
   await kv.set(['messages', message.id], message);
@@ -352,6 +358,9 @@ app.get('/api/posts', async (c) => {
       userImage: userData && userData.image ? `/uploads/${userData.image}` : null,
       visibility: post.visibility,
       parent: parentInfo,
+      // ★ここを追加！ これがないとフロントに「ぼかし設定」が届きません
+      isBlurred: post.isBlurred || false,
+      warningText: post.warningText || '',
       // ★フロントへ送るデータに追加
       likeCount,
       sorenaCount,

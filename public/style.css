@@ -1,20 +1,48 @@
-body {
+/* body {
   background-color: #e29399;
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-}
+} */
 /* --- 基本設定：背景色をピンクに設定 --- */
-body {
+/* body {
   margin: 0;
   padding: 0;
   font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
   background-color: #e29399; /* 指定のピンク色 */
-  color: #333;
+/* color: #333;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+} */
+
+/* --- body の基本設定（共通） --- */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+  background-color: #e29399; /* 背景のピンク */
+  color: #333;
+}
+
+/* --- ログイン・登録画面（auth-pageクラスがある場合）だけ中央寄せにする --- */
+body.auth-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* --- ホーム画面（タイムライン）用のコンテナ --- */
+.home-container {
+  width: 100%;
+  max-width: 600px; /* Twitterなどのように、読みやすい幅に制限 */
+  margin: 0 auto; /* 中央に配置 */
+  background-color: white; /* タイムラインの背景を白にすると見やすい */
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 /* コンテナ */
